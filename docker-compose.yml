@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+
+  front:
+    build: front-end/
+    image: front-end
+    container_name: front-end
+    ports:
+      - 4200:4200
+    env_file:
+      - .env
+    networks:
+      - docker-network
+    depends_on:
+      - db
+    volumes:
+      - ./front-end/:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: always
+
+  back:
+    build: back-end/
+    image: back-end
+    container_name: back-end
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    networks:
+      - docker-network
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql
+    container_name: mysql
+    command:
+      --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    port:
+      - "3306:3306"
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - docker-network
+    restart: always
+
+volumes:
+  db:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "${HOME}/data/db"
+
+networks:
+  docker-network:
+    driver: bridge

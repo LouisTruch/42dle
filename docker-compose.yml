@@ -21,16 +21,35 @@ services:
     image: mysql
     container_name: mysql
     command:
-      --default-authentication-plugin=mysql_native_password
+      --default-authentication-plugin=caching_sha2_password
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: ${DB_NAME}
     # ports:
-    #   - "3306:3306"
+    #   - "4242:4242"
     volumes:
       - db:/var/lib/postgresql/data
     networks:
       - docker-network
     restart: always
+
+  adminer:           
+    image: adminer         
+    container_name: adminer
+    restart: always           
+    ports:              
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_DB_DRIVE=${DB_DRIVER}
+      - ADMINER_DEFAULT_DB_HOST=mysql
+      - ADMINER_DEFAULT_DB_NAME=${DB_NAME}
+    depends_on:
+      - db
+    networks:
+      - docker-network
+
 
 volumes:
   db:
@@ -38,7 +57,7 @@ volumes:
     driver_opts:
       type: 'none'
       o: 'bind'
-      device: "${HOME}/data/db"
+      device: "./db"
 
 networks:
   docker-network:

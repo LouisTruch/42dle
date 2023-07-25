@@ -1,6 +1,6 @@
-IMAGES	:=	db back
+IMAGES	:=	postgres back
 
-CONTAINERS :=	mysql back-end
+CONTAINERS :=	postgres back-end
 
 PATH_DB :=	./db
 

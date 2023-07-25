@@ -1,7 +1,6 @@
 use std::env;
-use sqlx::{mysql::MySqlPool, Pool, MySqlConnection, Row};
-#[macro_use]
-extern crate rocket;
+
+#[macro_use] extern crate rocket;
 
 #[get("/")]
 fn index() -> &'static str {

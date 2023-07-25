@@ -4,13 +4,8 @@ use std::env;
 
 #[macro_use] extern crate rocket;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
-
 #[get("/token/<code>")]
-async fn token(code: &str) -> String {
+async fn generate_token(code: &str) -> String {
     let client = reqwest::Client::new();
     let res = client.post("https://api.intra.42.fr/oauth/token")
         .header("grant_type", "authorization_code")
@@ -22,16 +17,34 @@ async fn token(code: &str) -> String {
 
     match res {
         Ok(_res) =>{
-            // print!("Ok from match: {}", _res.text().await.expect("failed"));
-            format!("Ok from match: {}", _res.text().await.expect("failed"))
+            format!("generateToken: {}", _res.text().await.expect("failed"))
         }
         Err(err) =>{
-            // print!("Err from match: {}", err);
-            format!("Err from match: {}", err)
+            format!("Error in generateToken: {}", err)
         }
     }
-    // .header("redirect_uri", uuid)
-    // "Hello, your code is ".to_string() + code
+}
+
+#[get("/users")]
+async fn get_all_users() -> String {
+    let mut bearer: String = String::from("Bearer ").to_owned();
+    let tmp: String = String::from("Bon").to_owned();
+    bearer.push_str(&tmp);
+    let client = reqwest::Client::new();
+
+    let res = client.get("https://api.intra.42.fr/v2/users")
+        .header("Authorization", bearer.as_str())
+        .send()
+        .await;
+
+    match res {
+        Ok(_res) =>{
+            format!("getAllUsers: {}", _res.text().await.expect("failed"))
+        }
+        Err(err) =>{
+            format!("Error in getAllUsers: {}", err)
+        }
+    }
 }
 
 #[launch]
@@ -49,5 +62,5 @@ fn rocket() -> _ {
     //         login TEXT NOT NULL
     //     )",
     // ).unwrap();
-    rocket::build().mount("/", routes![index, token])
+    rocket::build().mount("/", routes![generate_token, get_all_users])
 }

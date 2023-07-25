@@ -9,4 +9,6 @@ edition = "2021"
 rocket = { version = "=0.5.0-rc.3", features = ["json"] }
 rocket_dyn_templates = { version = "=0.1.0-rc.3", features = ["tera"] }
 mysql = "24.0.0"
-diesel = { version = "2.1.0", features = ["mysql"] }
+sqlx = "0.7.1"
+sqlx-core = "0.7.1"
+sqlx-mysql = "0.7.1"

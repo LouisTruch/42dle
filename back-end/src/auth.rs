@@ -74,12 +74,11 @@ pub fn quit(_user: User, jar: &CookieJar<'_>) -> Redirect  {
     Redirect::to(uri!(index::index))
 }
 
-#[get("/auth/users")]
-pub async fn get_all_users() -> String {
-    let token_plus_tard: String = String::from("Bon").to_owned();
+#[get("/auth/users/<code>")]
+pub async fn get_all_users(code: &str) -> String {
     let mut bearer: String = String::from("Bearer ").to_owned();
 
-    bearer.push_str(&token_plus_tard);
+    bearer.push_str(&code);
     let client = reqwest::Client::new();
 
     let res = client.get("https://api.intra.42.fr/v2/users")
@@ -89,7 +88,7 @@ pub async fn get_all_users() -> String {
 
     match res {
         Ok(_res) =>{
-            format!("get_all_users: {}", _res.text().await.expect("failed"))
+            _res.text().await.expect("failed")
         }
         Err(err) =>{
             format!("Error in get_all_users: {}", err)

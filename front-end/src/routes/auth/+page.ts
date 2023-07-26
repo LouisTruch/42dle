@@ -10,9 +10,12 @@ export const load = async (loadEvent) => {
 
 	const response = await fetch(`http://localhost:8000/auth/token/${code}`);
 	const token = await response.json();
-	const test = token.access_token;
+	const test = await token.access_token;
 	console.log(token);
 	console.log(test);
+	const resp = await fetch(`http://localhost:8000/auth/users/${test}`);
+	const fdp = await resp.json();
+	console.log(fdp);
 
 	return { code };
 };

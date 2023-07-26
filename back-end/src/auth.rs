@@ -1,9 +1,10 @@
 use std::env;
-
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::{Redirect};
+use rocket::response::Redirect;
 use rocket::http::{Cookie, CookieJar};
+
+use crate::index;
 pub struct User(String);
 
 #[rocket::async_trait]
@@ -19,7 +20,7 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
-#[get("/token/<code>")]
+#[get("/auth/token/<code>")]
 pub async fn exchange_code(code: &str) -> String {
     let client: reqwest::Client = reqwest::Client::new();
     let res = client.post("https://api.intra.42.fr/oauth/token")
@@ -40,36 +41,27 @@ pub async fn exchange_code(code: &str) -> String {
     }
 }
 
-#[get("/login")]
+#[get("/auth/login")]
 pub fn post_login(jar: &CookieJar<'_>) -> Redirect {
     println!("generate new cookie");
     jar.add_private(Cookie::new("user_id", 1.to_string()));
-    Redirect::to(uri!(index))
+    Redirect::to(uri!(index::index))
 }
 
-#[get("/", rank = 2)]
-pub fn no_auth_index() -> &'static str {
-    "Your are at home not log"
-}
-
-#[get("/")]
-pub fn index(_user: User) -> &'static str {
-    "Your are at home logged"
-}
-
-#[get("/quit")]
-pub fn quit(_user: User, jar: &CookieJar<'_>) -> &'static str  {
+#[get("/auth/quit")]
+pub fn quit(_user: User, jar: &CookieJar<'_>) -> Redirect  {
     jar.remove_private(Cookie::named("user_id"));
-    "you are logout"
+    Redirect::to(uri!(index::index))
 }
 
-#[get("/users")]
+#[get("/auth/users")]
 pub async fn get_all_users() -> String {
     let token_plus_tard: String = String::from("Bon").to_owned();
     let mut bearer: String = String::from("Bearer ").to_owned();
     let client = reqwest::Client::new();
 
     bearer.push_str(&token_plus_tard);
+
     let res = client.get("https://api.intra.42.fr/v2/users")
         .header("Authorization", bearer.as_str())
         .send()

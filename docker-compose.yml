@@ -27,7 +27,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${DB_PWD}
       - POSTGRES_USER=${DB_USER}
-      # - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_DB=${DB_NAME}
     networks:
       - docker-network
     restart: always

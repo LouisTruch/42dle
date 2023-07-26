@@ -1,8 +1,17 @@
+#[macro_use]
+extern crate rocket;
+
 mod auth;
 
-#[macro_use] extern crate rocket;
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![auth::generate_token, auth::get_all_users])
+    rocket::build()
+        .mount("/", routes![
+            auth::exchange_code, 
+            auth::get_all_users,
+            auth::no_auth_index,
+            auth::index,
+            auth::post_login,
+            auth::quit,])
 }

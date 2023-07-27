@@ -1,7 +1,5 @@
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
-use rocket::log::private::debug;
-use rocket::serde::json::Json;
 use rocket::{Request, Response};
 
 
@@ -18,7 +16,7 @@ fn rocket() -> _ {
         .mount("/", routes![
             index::no_auth_index,
             index::index])
-        .mount("/", routes![
+        .mount("/auth", routes![
             auth::exchange_code, 
             auth::get_all_users,
             auth::post_login,

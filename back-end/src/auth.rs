@@ -3,7 +3,6 @@ use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::Redirect;
 use rocket::http::{Cookie, CookieJar};
-use rocket::serde::json::Json;
 
 use crate::index;
 pub struct User(String);
@@ -21,7 +20,7 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
-#[get("/auth/token/<code>")]
+#[get("/token/<code>")]
 pub async fn exchange_code(code: &str) -> String {
     let client: reqwest::Client = reqwest::Client::new();
 
@@ -61,20 +60,20 @@ pub async fn exchange_code(code: &str) -> String {
     }
 }
 
-#[get("/auth/login")]
+#[get("/login")]
 pub fn post_login(jar: &CookieJar<'_>) -> Redirect {
     println!("generate new cookie");
     jar.add_private(Cookie::new("user_id", 1.to_string()));
     Redirect::to(uri!(index::index))
 }
 
-#[get("/auth/quit")]
+#[get("/quit")]
 pub fn quit(_user: User, jar: &CookieJar<'_>) -> Redirect  {
     jar.remove_private(Cookie::named("user_id"));
     Redirect::to(uri!(index::index))
 }
 
-#[get("/auth/users/<code>")]
+#[get("/users/<code>")]
 pub async fn get_all_users(code: &str) -> String {
     let mut bearer: String = String::from("Bearer ").to_owned();
 

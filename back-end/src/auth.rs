@@ -1,8 +1,9 @@
 use std::env;
+use reqwest::Response;
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::Redirect;
 use rocket::http::{Cookie, CookieJar};
+use serde::Deserialize;
 
 use crate::index;
 pub struct User(String);
@@ -20,77 +21,93 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
-#[get("/token/<code>")]
-pub async fn exchange_code(code: &str) -> String {
-    let client: reqwest::Client = reqwest::Client::new();
+#[derive(Deserialize)]
+struct ApiToken {
+    access_token: String,
+}
 
-    let mut client_id: String = String::from("client_id=").to_owned();
-    let tmp: String =  env::var("CLIENT_ID").expect("CLIENT_ID not found in .env");
-    client_id.push_str(&tmp);
-    println!("{}", client_id);
+#[derive(Deserialize)]
+struct ImageData {
+    link: String,
+    versions: ImageVersions,
+}
 
-    let mut client_secret: String = String::from("client_secret=").to_owned();
-    let tmp2: String =  env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env");
-    client_secret.push_str(&tmp2);
-    println!("{}", client_secret);
+#[derive(Deserialize)]
+struct ImageVersions {
+    large: String,
+    medium: String,
+    small: String,
+    micro: String,
+}
 
-    let mut code_to_body: String = String::from("code=").to_owned();
-    code_to_body.push_str(&code);
-    println!("{}", code_to_body);
+#[derive(Deserialize)]
+struct ApiData {
+    login: String,
+    image: ImageData,
+}
 
+/*
+    CODE BELOW
+*/
+
+async fn generate_token(code: &str, ) -> String{
+    //get informations in .env file to generate request's body for 42's api
+    let client_id: String =  env::var("CLIENT_ID").expect("CLIENT_ID not found in .env");
+    let client_secret: String =  env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env");
     let data = [("grant_type", "authorization_code"),
-    ("client_id", &tmp),
-    ("client_secret", &tmp2),
-    ("code", &code), 
-    ("redirect_uri", "http://localhost:5173/auth")];
+        ("client_id", &client_id),
+        ("client_secret", &client_secret),
+        ("code", &code), 
+        ("redirect_uri", "http://localhost:5173/auth"),
+    ];
 
-    let res = client.post("https://api.intra.42.fr/oauth/token")
+    let client: reqwest::Client = reqwest::Client::new();
+    let acces_token = client.post("https://api.intra.42.fr/oauth/token")
         .header("Content-Type","application/x-www-form-urlencoded")
         .form(&data)
         .send()
-        .await;
-
-    match res {
-        Ok(_res) =>{
-            _res.text().await.expect("failed")
-        }
-        Err(err) =>{
-            format!("Error in exchange_code: {}", err)
-        }
-    }
+        .await
+        .expect("generate_token: Response from 42's api failed")
+        .json::<ApiToken>()
+        .await
+        .expect("generate_token: Parse the response from 42's api failed")
+        .access_token;
+    acces_token
 }
 
-#[get("/login")]
-pub fn post_login(jar: &CookieJar<'_>) -> Redirect {
-    println!("generate new cookie");
-    jar.add_private(Cookie::new("user_id", 1.to_string()));
-    Redirect::to(uri!(index::index))
-}
-
-#[get("/quit")]
-pub fn quit(_user: User, jar: &CookieJar<'_>) -> Redirect  {
-    jar.remove_private(Cookie::named("user_id"));
-    Redirect::to(uri!(index::index))
-}
-
-#[get("/users/<code>")]
-pub async fn get_all_users(code: &str) -> String {
+pub async fn get_user_data(token: String) -> (String, String) {
     let mut bearer: String = String::from("Bearer ").to_owned();
+    bearer.push_str(&token);
 
-    bearer.push_str(&code);
     let client = reqwest::Client::new();
 
     let res = client.get("https://api.intra.42.fr/v2/me")
         .header("Authorization", bearer.as_str())
         .send()
-        .await;
+        .await
+        .expect("get_user_data: Response from 42's api failed")
+        .json::<ApiData>()
+        .await
+        .expect("get_user_data: Parse the response from 42's api failed");
 
-    match res {
-        Ok(_res) =>{
-            _res.text().await.expect("failed")
-        }
-        Err(err) =>{
-            format!("Error in get_all_users: {}", err)
-        }
+    return (res.login, res.image.versions.medium);
+}
+
+#[get("/token/<code>")]
+pub async fn init_session(code: &str, jar: &CookieJar<'_>) -> String {
+    let token = generate_token(code).await;
+    let (login, img) = get_user_data(token).await;
+    println!("CEST LA");
+    // jar.add_private(Cookie::new("user_id", login));
+    "OK".to_string()
+}
+
+
+#[get("/logout")]
+pub fn logout(_user: User, jar: &CookieJar<'_>) {
+    if let Some(cookie) = jar.get("user_id") {
+        let cookie_value = cookie.value();
+        println!("Cookie content before deletion: {}", cookie_value);
     }
+    jar.remove_private(Cookie::named("user_id"));
 }

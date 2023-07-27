@@ -17,10 +17,8 @@ fn rocket() -> _ {
             index::no_auth_index,
             index::index])
         .mount("/auth", routes![
-            auth::exchange_code, 
-            auth::get_all_users,
-            auth::post_login,
-            auth::quit,])
+            auth::init_session, 
+            auth::logout,])
 }
 
 pub struct Cors;

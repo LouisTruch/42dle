@@ -18,21 +18,21 @@ services:
   #   networks:
   #     - docker-network
 
-  back:
-    build: back-end/
-    image: back-end
-    container_name: back-end
-    ports:
-      - 8000:8000
-    env_file:
-      - .env
-    networks:
-      - docker-network
-    volumes:
-      - ./back-end/src:/app/src
-    depends_on:
-      - db
-    restart: always
+  # back:
+  #   build: back-end/
+  #   image: back-end
+  #   container_name: back-end
+  #   ports:
+  #     - 8000:8000
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - docker-network
+  #   volumes:
+  #     - ./back-end/src:/app/src
+  #   depends_on:
+  #     - db
+  #   restart: always
 
   db:
     image: postgres

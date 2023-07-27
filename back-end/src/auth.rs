@@ -54,7 +54,7 @@ struct ApiData {
 */
 
 async fn generate_token(code: &str, ) -> String{
-    //get informations in .env file to generate request's body for 42's api
+    // Get informations in .env file to generate request's body for 42's api
     let client_id: String =  env::var("CLIENT_ID").expect("CLIENT_ID not found in .env");
     let client_secret: String =  env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env");
     let data = [("grant_type", "authorization_code"),
@@ -64,6 +64,9 @@ async fn generate_token(code: &str, ) -> String{
         ("redirect_uri", "http://localhost:5173/auth"),
     ];
 
+    // Send a request to 42's API with a request body.
+    // The API will return a response in JSON format.
+    // This JSON response will be parsed to extract access_token and return it as a String.
     let client: reqwest::Client = reqwest::Client::new();
     let access_token = client.post("https://api.intra.42.fr/oauth/token")
         .header("Content-Type","application/x-www-form-urlencoded")
@@ -79,11 +82,13 @@ async fn generate_token(code: &str, ) -> String{
 }
 
 pub async fn get_user_data(token: String) -> (String, String) {
+    // Prepare the "Authorization" header by appending the token to "Bearer ".
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
 
+    // Send a GET request to 42's api with the "Authorization" header.
+    // wait the response and parse it into the 'ApiData' struct.
     let client = reqwest::Client::new();
-
     let res = client.get("https://api.intra.42.fr/v2/me")
         .header("Authorization", bearer.as_str())
         .send()
@@ -93,35 +98,35 @@ pub async fn get_user_data(token: String) -> (String, String) {
         .await
         .expect("get_user_data: Parse the response from 42's api failed");
 
+    // From this struct it will Extract login & image url.
+    // Return them as a tuple.
     return (res.login, res.image.versions.medium);
 }
 
+/*
+    1) Exchange the code provided by the  frontend's query for a token returned by 42's api
+    2) This token is used to retrieve the login & pp of the user who sent the code
+    3) The login & pp are sent and saved into the Postgres database
+    4) Then, the login is used as value for the session cookie
+    5) Finally, return the new private session cookie to the frontend
+*/
 #[get("/token/<code>")]
 pub async fn init_session(db: &State<DatabaseConnection> ,code: &str, jar: &CookieJar<'_>) -> () {
     let token = generate_token(code).await;
     let (login, img) = get_user_data(token).await;
-    // users::new_user(&db, &login, &img).await.expect("Fail to create new user in db");
+    // users::new_user(&db, &login, img).await.expect("Fail to create new user in db");
     let mut cookie = Cookie::new("user_id", login);
     cookie.secure();
     cookie.set_secure(false);
     cookie.set_same_site(SameSite::Lax);
     jar.add_private(cookie)
-    // // samesite
-    // // "Set-Cookie".to_string()
-    // http::Response::builder()
-    //     .status(http::StatusCode::SEE_OTHER)
-    //     .header("Location", "/")
-    //     .header("Set-Cookie", added)
-    //     .unwrap()
 }
 
 
 #[get("/logout")]
 pub fn logout(_user: User, jar: &CookieJar<'_>) {
-    if let Some(cookie) = jar.get("user_id") {
-        let cookie_value = cookie.value();
-        println!("Cookie content before deletion: {}", cookie_value);
-    }
+    let coke = jar.get_private("user_id").unwrap().clone();
+    println!("Cookie value: {}", coke.value().to_string());
     jar.remove_private(Cookie::named("user_id"));
 }
 

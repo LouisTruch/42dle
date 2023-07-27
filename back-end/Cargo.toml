@@ -17,4 +17,5 @@ sea-orm = { version = "0.11.3", features = [
     "macros"
 ]}
 migration = { path = "migration" }
-
+dotenv = "0.15.0"
+http = "*"

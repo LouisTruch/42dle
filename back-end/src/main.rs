@@ -7,12 +7,15 @@ use sea_orm::Database;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
+use dotenv::dotenv;
 
 #[macro_use]
 extern crate rocket;
 
+
 #[launch]
 async fn rocket() -> _ {
+    dotenv().ok();
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
         Ok(db_conn) => db_conn,
         Err(e) => panic!("Error database connection: {}", e)
@@ -27,6 +30,7 @@ async fn rocket() -> _ {
         .manage(db_conn)
         .attach(Cors)
         .mount("/", routes![
+            auth::tmp,
             index::no_auth_index,
             index::index])
         .mount("/auth", routes![

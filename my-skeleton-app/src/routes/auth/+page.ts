@@ -8,14 +8,9 @@ export const load = async (loadEvent) => {
 		throw redirect(307, '/');
 	}
 
-	const response = await fetch(`http://localhost:8000/auth/token/${code}`);
-	const token = await response.json();
-	const access_token = await token.access_token;
-	console.log(token);
-	console.log(access_token);
-	const resp = await fetch(`http://localhost:8000/auth/users/${access_token}`);
-	const responseV2Me = await resp.json();
-	console.log(responseV2Me);
+	const response = await fetch(`http://localhost:8000/auth/token/${code}`).then(
+	);
+	console.log(response);
 
-	throw redirect(307, '/profile');
+	throw redirect(302, '/login');
 };

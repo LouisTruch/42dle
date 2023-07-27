@@ -2,10 +2,13 @@ use std::env;
 use reqwest::Response;
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::http::{Cookie, CookieJar};
+use rocket::http::{Cookie, CookieJar, SameSite};
 use serde::Deserialize;
-
+use http;
+use sea_orm::DatabaseConnection;
+use rocket::State;
 use crate::index;
+use crate::users;
 pub struct User(String);
 
 #[rocket::async_trait]
@@ -28,16 +31,16 @@ struct ApiToken {
 
 #[derive(Deserialize)]
 struct ImageData {
-    link: String,
+    // link: String,
     versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
 struct ImageVersions {
-    large: String,
+    // large: String,
     medium: String,
-    small: String,
-    micro: String,
+    // small: String,
+    // micro: String,
 }
 
 #[derive(Deserialize)]
@@ -62,7 +65,7 @@ async fn generate_token(code: &str, ) -> String{
     ];
 
     let client: reqwest::Client = reqwest::Client::new();
-    let acces_token = client.post("https://api.intra.42.fr/oauth/token")
+    let access_token = client.post("https://api.intra.42.fr/oauth/token")
         .header("Content-Type","application/x-www-form-urlencoded")
         .form(&data)
         .send()
@@ -72,7 +75,7 @@ async fn generate_token(code: &str, ) -> String{
         .await
         .expect("generate_token: Parse the response from 42's api failed")
         .access_token;
-    acces_token
+    access_token
 }
 
 pub async fn get_user_data(token: String) -> (String, String) {
@@ -94,12 +97,22 @@ pub async fn get_user_data(token: String) -> (String, String) {
 }
 
 #[get("/token/<code>")]
-pub async fn init_session(code: &str, jar: &CookieJar<'_>) -> String {
+pub async fn init_session(db: &State<DatabaseConnection> ,code: &str, jar: &CookieJar<'_>) -> () {
     let token = generate_token(code).await;
     let (login, img) = get_user_data(token).await;
-    println!("CEST LA");
-    // jar.add_private(Cookie::new("user_id", login));
-    "OK".to_string()
+    // await users::new_user(db, login, img).expect("Fail to create new user in db");
+    let mut cookie = Cookie::new("user_id", login);
+    cookie.secure();
+    cookie.set_secure(false);
+    cookie.set_same_site(SameSite::Lax);
+    jar.add_private(cookie)
+    // // samesite
+    // // "Set-Cookie".to_string()
+    // http::Response::builder()
+    //     .status(http::StatusCode::SEE_OTHER)
+    //     .header("Location", "/")
+    //     .header("Set-Cookie", added)
+    //     .unwrap()
 }
 
 
@@ -110,4 +123,14 @@ pub fn logout(_user: User, jar: &CookieJar<'_>) {
         println!("Cookie content before deletion: {}", cookie_value);
     }
     jar.remove_private(Cookie::named("user_id"));
+}
+
+
+#[get("/aaa")]
+pub async fn tmp(jar: &CookieJar<'_>) -> () {
+    let mut cookie = Cookie::new("user_id", "armand".to_string());
+    cookie.secure();
+    cookie.set_secure(false);
+    cookie.set_same_site(SameSite::Lax);
+    jar.add_private(cookie)
 }

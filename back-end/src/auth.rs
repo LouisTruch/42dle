@@ -81,7 +81,7 @@ pub async fn get_all_users(code: &str) -> String {
     bearer.push_str(&code);
     let client = reqwest::Client::new();
 
-    let res = client.get("https://api.intra.42.fr/v2/users")
+    let res = client.get("https://api.intra.42.fr/v2/me")
         .header("Authorization", bearer.as_str())
         .send()
         .await;

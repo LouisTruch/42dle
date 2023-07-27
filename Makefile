@@ -18,8 +18,8 @@ down:
 	@docker compose  down -v
 
 clean: down stop clean_volumes
-	@docker rm -f ${CONTAINERS}
-	@docker rmi -f ${IMAGES}
+	-@docker rm -f ${CONTAINERS}
+	-@docker rmi -f ${IMAGES}
 	@docker volume rm -f `docker volume ls`
 
 clean_volumes:

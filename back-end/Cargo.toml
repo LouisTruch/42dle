@@ -4,12 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rocket = { version = "=0.5.0-rc.3", features = ["json", "secrets"] }
 # rocket-jwt = { version = "*"}
 reqwest = { version = "0.11.18", features = ["json"] }
 postgres = "*"
-diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
 serde_json = { version = "1.0.103"}
 serde = "1.0.152"
+sea-orm = { version = "0.11.3", features = [
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+    "macros"
+]}
+migration = { path = "migration" }
+

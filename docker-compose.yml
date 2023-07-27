@@ -37,14 +37,12 @@ services:
   db:
     image: postgres
     container_name: postgres
-    ports:
-      - '5432:5432'
-    # volumes:
-    #   - ${HOME}/42dle/db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=${DB_PWD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PWD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
     networks:
       - docker-network
     restart: always

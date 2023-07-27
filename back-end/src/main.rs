@@ -12,15 +12,16 @@ use dotenv::dotenv;
 #[macro_use]
 extern crate rocket;
 
-
 #[launch]
 async fn rocket() -> _ {
     dotenv().ok();
+    // Connect to the database and panic if fail
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
         Ok(db_conn) => db_conn,
         Err(e) => panic!("Error database connection: {}", e)
     };
 
+    // Migrate the users table
     match Migrator::up(&db_conn, None).await {
         Ok(()) => println!("Migration done:"),
         Err(e) => println!("Migration failed: {}", e)

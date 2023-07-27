@@ -11,7 +11,7 @@
 </script>
 
 <AppShell>
-	<svelte:fragment slot="header">
+	<svelte:fragment slot="pageHeader">
 		<Header />
 	</svelte:fragment>
 	<slot />

@@ -11,6 +11,11 @@ build:
 	@docker compose  up --build
 	docker ps
 
+detach: 
+	mkdir -p ${PATH_DB}
+	@docker compose  up --build --detach
+	docker ps
+
 stop:
 	@docker compose  stop
 
@@ -18,8 +23,8 @@ down:
 	@docker compose  down -v
 
 clean: down stop clean_volumes
-	@docker rm -f ${CONTAINERS}
-	@docker rmi -f ${IMAGES}
+	-@docker rm -f ${CONTAINERS}
+	-@docker rmi -f ${IMAGES}
 	@docker volume rm -f `docker volume ls`
 
 clean_volumes:

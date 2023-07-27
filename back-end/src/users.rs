@@ -4,7 +4,7 @@ use crate::entities::{prelude::*, *};
 
 pub async fn new_user(
     db: &DatabaseConnection,
-    login: String, profile_pic: String
+    login: &String, profile_pic: &String
 ) -> Result<users::ActiveModel, DbErr> {
 
     users::ActiveModel {

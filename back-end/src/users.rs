@@ -1,3 +1,4 @@
+use rocket::response::status::{self, Accepted, BadRequest};
 use sea_orm::{DatabaseConnection, Set};
 use sea_orm::*;
 use crate::entities::{prelude::*, *};
@@ -5,16 +6,25 @@ use crate::entities::{prelude::*, *};
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, profile_pic: &String
-) -> Result<users::ActiveModel, DbErr> {
+) -> Result<InsertResult<users::ActiveModel>, DbErr> {
 
-    users::ActiveModel {
+    let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
         score: Set(Some(0)),
         ..Default::default()
-    }
-    .save(db)
-    .await
+    };
+
+    Users::insert(record).exec(db).await
+    //     Ok(_) => println!("User Created!"),
+    //     Err(e) => { 
+    //         println!("{}", e);
+    //         return status::BadRequest(Some("User already in database!"));
+    //     }
+    // };
+    // // .save(db)
+    // // .await
+    // status::Accepted(Some("New User Created!"))
 }
 
 pub async fn update_user_by_login(

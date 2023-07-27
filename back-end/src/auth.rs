@@ -100,7 +100,13 @@ pub async fn get_user_data(token: String) -> (String, String) {
 pub async fn init_session(db: &State<DatabaseConnection> ,code: &str, jar: &CookieJar<'_>) -> () {
     let token = generate_token(code).await;
     let (login, img) = get_user_data(token).await;
-    // users::new_user(&db, &login, &img).await.expect("Fail to create new user in db");
+    match users::new_user(&db, &login, &img).await {
+        Ok(_) => println!("User Created!"),
+        Err(e) => {
+            println!("{e}");
+            return ();
+        }
+    };
     let mut cookie = Cookie::new("user_id", login);
     cookie.secure();
     cookie.set_secure(false);

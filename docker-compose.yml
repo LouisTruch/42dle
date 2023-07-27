@@ -1,6 +1,7 @@
-version: "3.8"
+version: '3.8'
 
 services:
+<<<<<<< HEAD
   # back:
   #   build: back-end/
   #   image: back-end
@@ -16,6 +17,40 @@ services:
   #   depends_on:
   #     - db
   #   restart: always
+=======
+  # front:
+  #   build: front-end/
+  #   image: node-image
+  #   container_name: front-end
+  #   ports:
+  #     - 3000:3000
+  #     - 24678:24678
+  #     - 5173:5173
+  #   volumes:
+  #     - ./front-end/:/usr/src/app
+  #     - /usr/src/app/node_modules
+  #   restart: on-failure
+  #   depends_on:
+  #     - back
+  #   networks:
+  #     - docker-network
+
+  back:
+    build: back-end/
+    image: back-end
+    container_name: back-end
+    ports:
+      - 8000:8000
+    env_file:
+      - .env
+    networks:
+      - docker-network
+    volumes:
+      - ./back-end/src:/app/src
+    depends_on:
+      - db
+    restart: always
+>>>>>>> 0f72a8948cbd3e1e19d83d8e7edf88bc703ac8a8
 
   db:
     image: postgres
@@ -25,17 +60,27 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_NAME}
     ports:
+<<<<<<< HEAD
       - "5432:5432"
+=======
+      - '5432:5432'
+    # volumes:
+    #   - ${HOME}/42dle/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${DB_PWD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+>>>>>>> 0f72a8948cbd3e1e19d83d8e7edf88bc703ac8a8
     networks:
       - docker-network
     restart: always
 
-  adminer:           
-    image: adminer         
+  adminer:
+    image: adminer
     container_name: adminer
-    restart: always           
-    ports:              
-      - "8080:8080"
+    restart: always
+    ports:
+      - '8080:8080'
     environment:
       - ADMINER_DEFAULT_DB_DRIVE=${DB_DRIVER}
       - ADMINER_DEFAULT_DB_HOST=postgres

@@ -1,3 +1,10 @@
 {
+<<<<<<< HEAD
     "rust-analyzer.showUnlinkedFileNotification": false
+=======
+    "rust-analyzer.linkedProjects": [
+        "./back-end/Cargo.toml",
+        "./back-end/Cargo.toml"
+    ]
+>>>>>>> 0f72a8948cbd3e1e19d83d8e7edf88bc703ac8a8
 }

@@ -1,9 +1,10 @@
 use std::env;
-
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::{Redirect};
+use rocket::response::Redirect;
 use rocket::http::{Cookie, CookieJar};
+
+use crate::index;
 pub struct User(String);
 
 #[rocket::async_trait]
@@ -22,17 +23,36 @@ impl<'r> FromRequest<'r> for User {
 #[get("/token/<code>")]
 pub async fn exchange_code(code: &str) -> String {
     let client: reqwest::Client = reqwest::Client::new();
+
+    let mut client_id: String = String::from("client_id=").to_owned();
+    let tmp: String =  env::var("CLIENT_ID").expect("CLIENT_ID not found in .env");
+    client_id.push_str(&tmp);
+    println!("{}", client_id);
+
+    let mut client_secret: String = String::from("client_secret=").to_owned();
+    let tmp2: String =  env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env");
+    client_secret.push_str(&tmp2);
+    println!("{}", client_secret);
+
+    let mut code_to_body: String = String::from("code=").to_owned();
+    code_to_body.push_str(&code);
+    println!("{}", code_to_body);
+
+    let data = [("grant_type", "authorization_code"),
+    ("client_id", &tmp),
+    ("client_secret", &tmp2),
+    ("code", &code), 
+    ("redirect_uri", "http://localhost:5173/auth")];
+
     let res = client.post("https://api.intra.42.fr/oauth/token")
-        .header("grant_type", "authorization_code")
-        .header("client_id", env::var("CLIENT_ID").expect("CLIENT_ID not found in .env"))
-        .header("client_secret", env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env"))
-        .header("code", code)
+        .header("Content-Type","application/x-www-form-urlencoded")
+        .form(&data)
         .send()
         .await;
 
     match res {
         Ok(_res) =>{
-            format!("exchange_code: {}", _res.text().await.expect("failed"))
+            _res.text().await.expect("failed")
         }
         Err(err) =>{
             format!("Error in exchange_code: {}", err)
@@ -44,40 +64,30 @@ pub async fn exchange_code(code: &str) -> String {
 pub fn post_login(jar: &CookieJar<'_>) -> Redirect {
     println!("generate new cookie");
     jar.add_private(Cookie::new("user_id", 1.to_string()));
-    Redirect::to(uri!(index))
-}
-
-#[get("/", rank = 2)]
-pub fn no_auth_index() -> &'static str {
-    "Your are at home not log"
-}
-
-#[get("/")]
-pub fn index(_user: User) -> &'static str {
-    "Your are at home logged"
+    Redirect::to(uri!(index::index))
 }
 
 #[get("/quit")]
-pub fn quit(_user: User, jar: &CookieJar<'_>) -> &'static str  {
+pub fn quit(_user: User, jar: &CookieJar<'_>) -> Redirect  {
     jar.remove_private(Cookie::named("user_id"));
-    "you are logout"
+    Redirect::to(uri!(index::index))
 }
 
-#[get("/users")]
-pub async fn get_all_users() -> String {
-    let token_plus_tard: String = String::from("Bon").to_owned();
+#[get("/users/<code>")]
+pub async fn get_all_users(code: &str) -> String {
     let mut bearer: String = String::from("Bearer ").to_owned();
+
+    bearer.push_str(&code);
     let client = reqwest::Client::new();
 
-    bearer.push_str(&token_plus_tard);
-    let res = client.get("https://api.intra.42.fr/v2/users")
+    let res = client.get("https://api.intra.42.fr/v2/me")
         .header("Authorization", bearer.as_str())
         .send()
         .await;
 
     match res {
         Ok(_res) =>{
-            format!("get_all_users: {}", _res.text().await.expect("failed"))
+            _res.text().await.expect("failed")
         }
         Err(err) =>{
             format!("Error in get_all_users: {}", err)

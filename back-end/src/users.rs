@@ -1,20 +1,37 @@
 use sea_orm::{DatabaseConnection, Set};
-use sea_orm::EntityTrait;
-use rocket::response::status;
-use rocket::State;
+use sea_orm::*;
 use crate::entities::{prelude::*, *};
 
-#[post("/new/<login>")]
-pub async fn new_user(db_conn: &State<DatabaseConnection>, login: &str) -> status::Accepted<&'static str> {
-    let db_conn = db_conn as &DatabaseConnection;
+pub async fn new_user(
+    db: &DatabaseConnection,
+    login: String, profile_pic: String
+) -> Result<users::ActiveModel, DbErr> {
 
-    let user = users::ActiveModel {
+    users::ActiveModel {
         login: Set(login.to_owned()),
+        profile_pic: Set(profile_pic.to_owned()),
         score: Set(Some(0)),
         ..Default::default()
-    };
+    }
+    .save(db)
+    .await
+}
 
-    let _result = Users::insert(user.clone()).exec(db_conn).await;
+pub async fn update_user_by_login(
+    db: &DatabaseConnection,
+    data: users::Model,
+) -> Result<users::Model, DbErr> {
+    let users: users::ActiveModel = Users::find_by_id(data.login)
+        .one(db)
+        .await?
+        .ok_or(DbErr::Custom("Cannot find post.".to_owned()))
+        .map(Into::into)?;
 
-    status::Accepted(Some("User Created"))
+    users::ActiveModel {
+        login: users.login,
+        score: Set(data.score.to_owned()),
+        profile_pic: Set(data.profile_pic.to_owned()),
+    }
+    .update(db)
+    .await
 }

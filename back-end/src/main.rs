@@ -2,6 +2,7 @@ mod auth;
 mod index;
 mod users;
 mod entities;
+use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
@@ -16,6 +17,12 @@ async fn rocket() -> _ {
         Ok(db_conn) => db_conn,
         Err(e) => panic!("Error database connection: {}", e)
     };
+
+    match Migrator::up(&db_conn, None).await {
+        Ok(()) => println!("Migration done:"),
+        Err(e) => println!("Migration failed: {}", e)
+    };
+
     rocket::build()
         .manage(db_conn)
         .attach(Cors)
@@ -26,9 +33,7 @@ async fn rocket() -> _ {
             auth::exchange_code, 
             auth::get_all_users,
             auth::post_login,
-            auth::quit,])
-        .mount("/user", routes![
-            users::new_user
+            auth::quit,
         ])
 }
 

@@ -11,6 +11,11 @@ build:
 	@docker compose  up --build
 	docker ps
 
+detach: 
+	mkdir -p ${PATH_DB}
+	@docker compose  up --build --detach
+	docker ps
+
 stop:
 	@docker compose  stop
 

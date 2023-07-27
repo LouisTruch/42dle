@@ -1,4 +1,5 @@
 mod auth;
+mod index;
 mod users;
 mod entities;
 use sea_orm::Database;
@@ -6,12 +7,8 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 
-
 #[macro_use]
 extern crate rocket;
-
-mod auth;
-mod index;
 
 #[launch]
 async fn rocket() -> _ {

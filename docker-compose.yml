@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-<<<<<<< HEAD
-  # back:
-  #   build: back-end/
-  #   image: back-end
-  #   container_name: back-end
-  #   ports:
-  #     - 8000:8000
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - docker-network
-  #   volumes:
-  #     - ./back-end/src:/app/src
-  #   depends_on:
-  #     - db
-  #   restart: always
-=======
   # front:
   #   build: front-end/
   #   image: node-image
@@ -50,7 +33,6 @@ services:
     depends_on:
       - db
     restart: always
->>>>>>> 0f72a8948cbd3e1e19d83d8e7edf88bc703ac8a8
 
   db:
     image: postgres
@@ -60,17 +42,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_NAME}
     ports:
-<<<<<<< HEAD
       - "5432:5432"
-=======
-      - '5432:5432'
-    # volumes:
-    #   - ${HOME}/42dle/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=${DB_PWD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
->>>>>>> 0f72a8948cbd3e1e19d83d8e7edf88bc703ac8a8
     networks:
       - docker-network
     restart: always

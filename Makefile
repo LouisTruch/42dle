@@ -1,10 +1,10 @@
-IMAGES	:=	postgres back
+IMAGES	:=	postgres adminer
 
-CONTAINERS :=	postgres back-end
+CONTAINERS :=	postgres adminer
 
 PATH_DB :=	./db
 
-all:	build
+all:	detach frontend backend
 
 build:
 	mkdir -p ${PATH_DB}
@@ -16,13 +16,15 @@ detach:
 	@docker compose  up --build --detach
 	docker ps
 
-stop:
-	@docker compose  stop
+frontend:
+	gnome-terminal -- npm run dev --prefix my-skeleton-app/
 
-down:
+backend:
+	gnome-terminal -- cargo watch -w src -C back-end -x run
+
+clean: clean_volumes
 	@docker compose  down -v
-
-clean: down stop clean_volumes
+	@docker compose  stop
 	-@docker rm -f ${CONTAINERS}
 	-@docker rmi -f ${IMAGES}
 	@docker volume rm -f `docker volume ls`
@@ -35,4 +37,4 @@ re: clean clean_volumes all
 prune: 
 	docker system prune -fa
 
-.PHONY: all clean re build stop down clean_volumes prune
+.PHONY: all clean re build clean_volumes prune frontend backend detach

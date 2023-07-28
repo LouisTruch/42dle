@@ -18,16 +18,36 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Users::ProfilePic).string().not_null())
-                    .col(ColumnDef::new(Users::Score).integer())
+                    .col(ColumnDef::new(Users::Score).integer().default(0).not_null())
                     .col(ColumnDef::new(Users::Try).array(ColumnType::String(Some(12))).not_null())
+                    .col(ColumnDef::new(Users::Win).boolean().not_null().default(false))
                     .to_owned(),
-            )   
+            )
+            .await.unwrap();
+
+        manager
+            .create_table(
+                Table::create()
+                .table(Game::Table)
+                .if_not_exists()
+                .col(ColumnDef::new(Game::Id).integer().not_null().primary_key().auto_increment())
+                .col(ColumnDef::new(Game::LoginToFind).string().not_null())
+                .col(ColumnDef::new(Game::ProfilePic).string().not_null())
+                .to_owned()
+            )
             .await
+ 
+
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(Users::Table).to_owned())
+            .await
+            .unwrap();
+
+        manager
+            .drop_table(Table::drop().table(Game::Table).to_owned())
             .await
     }
 }
@@ -41,4 +61,13 @@ enum Users {
     ProfilePic,
     Score,
     Try,
+    Win,
+}
+
+#[derive(Iden)]
+enum Game {
+    Table,
+    Id,
+    LoginToFind,
+    ProfilePic,
 }

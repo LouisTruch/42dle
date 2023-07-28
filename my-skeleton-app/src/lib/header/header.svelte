@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { AppBar, Avatar } from '@skeletonlabs/skeleton';
+
 </script>
 
 <AppBar padding="p-2" class="w-full">

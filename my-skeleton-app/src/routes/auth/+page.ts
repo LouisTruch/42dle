@@ -10,11 +10,11 @@ export const load = async (loadEvent: PageLoadEvent) => {
 	}
 
 	await fetch(`http://127.0.0.1:8000/auth/token/${codeAfterRedirect}`, {
-		credentials: 'include',
+		credentials: 'include', 
 	}).then(async (response) => {
 		// console.log(response.headers.getSetCookie());
 		const body: string[] = response.headers.getSetCookie();
-		await fetch('/api', { method: 'POST', body: String(body) }).then((response) => {
+		await fetch('/api', { method: 'POST',body: String(body) }).then((response) => {
 			throw redirect(302, '/profile');
 		});
 	});

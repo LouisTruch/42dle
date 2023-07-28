@@ -1,5 +1,5 @@
 import type { PageServerLoad, Actions } from './$types';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
 	guess: async ({ request }) => {
@@ -10,5 +10,11 @@ export const actions: Actions = {
 		if (!login) {
 			return fail(400, { login, missing: true });
 		}
+	},
+};
+
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.user) {
+		throw redirect(303, '/login');
 	}
 };

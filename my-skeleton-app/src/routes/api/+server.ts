@@ -1,4 +1,6 @@
-export async function POST(requestEvent) {
+import type { RequestEvent } from '@sveltejs/kit';
+
+export async function POST(requestEvent: RequestEvent) {
 	const { request } = requestEvent;
 	const body = await request.text();
 	const header = new Headers();

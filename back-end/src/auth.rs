@@ -1,28 +1,32 @@
 use std::env;
 use reqwest::Response;
-use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
-use rocket::http::{Cookie, CookieJar, SameSite};
+use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
-use sea_orm::prelude::TimeDateTimeWithTimeZone;
-use serde::Deserialize;
-use http;
+use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
 use crate::index;
 use crate::users;
-pub struct User(String);
+use jsonwebtoken::Header;
+use rocket::request::*;
+
+#[derive(Deserialize, Serialize)]
+pub struct Token{user_id: String}
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for User {
-    type Error = std::convert::Infallible;
+impl<'r> FromRequest<'r> for Token {
+    type Error = String;
 
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<User, Self::Error> {
-        request.cookies()
-            .get_private("user_id")
-            .and_then(|cookie| cookie.value().parse().ok())
-            .map(User)
-            .or_forward(())
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        println!("HEADER CONTENT: {:?}", request.headers());
+        for header in request.headers().get("cookie") {
+            println!("COOKIE: {}", header);
+            if let Ok(ret) = serde_json::from_str::<Token>(header){
+                return Outcome::Success(ret);                
+            }
+        }
+        return Outcome::Failure((Status::from_code(401).unwrap(), "parsing error".to_string()));
     }
 }
 
@@ -105,22 +109,21 @@ pub async fn get_user_data(token: String) -> (String, String) {
     return (res.login, res.image.versions.medium);
 }
 
-fn generate_cookie(login: String, jar: &CookieJar<'_>) -> (){
+fn generate_cookie(login: String, cookie: &CookieJar<'_>) -> (){
     // Create new cookie with user_id as name and login as value
-    let mut cookie = Cookie::new("user_id", login);
+    let mut new_cookie = Cookie::new("user_id", login);
     // set cookie to be lax with SameSite
-    cookie.secure();
-    cookie.set_secure(false);
-    cookie.set_same_site(SameSite::Lax);
+    // new_cookie.secure();
+    new_cookie.set_secure(false);
+    new_cookie.set_same_site(SameSite::Lax);
     // set an expirassion of 1 hour to the cookie
-    assert_eq!(cookie.expires(), None);
+    assert_eq!(new_cookie.expires(), None);
     let mut now = OffsetDateTime::now_utc();
     now += Duration::hours(1);
-    cookie.set_expires(now);
-    assert!(cookie.expires().is_some());
-    cookie.set_secure(true);
+    new_cookie.set_expires(now);
+    assert!(new_cookie.expires().is_some());
     // add cookie to cookie jar <3
-    jar.add_private(cookie)
+    cookie.add(new_cookie);
 }
 
 /*
@@ -131,32 +134,25 @@ fn generate_cookie(login: String, jar: &CookieJar<'_>) -> (){
     5) Finally, return the new private session cookie to the frontend
 */
 #[get("/token/<code>")]
-pub async fn init_session(db: &State<DatabaseConnection>, code: &str, jar: &CookieJar<'_>) -> () {
+pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     let token = generate_token(code).await;
     let (login, img) = get_user_data(token).await;
     match users::new_user(&db, &login, &img).await {
         Ok(_) => println!("User Created!"),
         Err(_e) => {
-            println!("init_session: User already exists in database.");
-            // let a = jar.get_private("user_id");
-            let coke = jar.get_private("user_id");
-            // println!("Cookie value: {}", coke.value().to_string());
-            
-            // match a {
-            //     Some(_) => {
-            //         print!("OOOOO");
-            //         return ();
-            //     }
-            //     None => {
-            //         println!("init_session: Generate new cookie for an existing user.");
-            //         generate_cookie(login, jar)
-            //     }
+            println!("init_session: {_e}");
+            // if let Some(coke) = cookie.get("user_id"){
+            //     print!("COOKIE: FOUND -> {}", coke.value().to_string());
+            //     return ();
+            // }else {
+            //     print!("COOKIE: NOT FOUND");
             // };
+            // println!("Cookie value: {}", coke.value().to_string());
+            generate_cookie(login, cookie);
             return ();
         }
     };
-    generate_cookie(login, jar)
-
+    generate_cookie(login, cookie)
 }
 
 // #[get("/check-cookie")]
@@ -172,7 +168,7 @@ pub async fn init_session(db: &State<DatabaseConnection>, code: &str, jar: &Cook
 // }
 
 #[get("/logout")]
-pub fn logout(_user: User, jar: &CookieJar<'_>) {
+pub fn logout(jar: &CookieJar<'_>) {
     let coke = jar.get_private("user_id").unwrap().clone();
     println!("Cookie value: {}", coke.value().to_string());
     jar.remove_private(Cookie::named("user_id"));
@@ -187,3 +183,15 @@ pub async fn tmp(jar: &CookieJar<'_>) -> () {
     cookie.set_same_site(SameSite::Lax);
     jar.add_private(cookie)
 }
+
+// #[[get]("/game-try/<try>")]
+// pub async fn game_try(try: &str) -> () {
+//     let login: String;
+
+//     if let Some(ret) = token {
+//         login = ret.user_id;
+//     } else {
+//         return ();
+//     }
+//     //new_try(login, try);
+// }

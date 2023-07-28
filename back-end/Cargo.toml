@@ -20,3 +20,4 @@ sea-orm = { version = "0.12.1", features = [
 migration = { path = "migration" }
 dotenv = "0.15.0"
 http = "*"
+jsonwebtoken = "*"

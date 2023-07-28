@@ -19,8 +19,9 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Users::ProfilePic).string().not_null())
                     .col(ColumnDef::new(Users::Score).integer())
+                    .col(ColumnDef::new(Users::Try).array(ColumnType::String(Some(12))).not_null())
                     .to_owned(),
-            )
+            )   
             .await
     }
 
@@ -32,10 +33,12 @@ impl MigrationTrait for Migration {
 }
 
 /// Learn more at https://docs.rs/sea-query#iden
+
 #[derive(Iden)]
 enum Users {
     Table,
     Login,
     ProfilePic,
     Score,
+    Try,
 }

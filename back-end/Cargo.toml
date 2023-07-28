@@ -11,7 +11,7 @@ reqwest = { version = "0.11.18", features = ["json"] }
 postgres = "*"
 serde_json = { version = "1.0.103"}
 serde = "1.0.152"
-sea-orm = { version = "0.12.1", features = [
+sea-orm = { version = "0.11.3", features = [
     "sqlx-postgres",
     "runtime-tokio-rustls",
     "macros",
@@ -19,5 +19,5 @@ sea-orm = { version = "0.12.1", features = [
 ]}
 migration = { path = "migration" }
 dotenv = "0.15.0"
-http = "*"
-jsonwebtoken = "*"
+http = "0.2.9"
+jsonwebtoken = "8.3.0"

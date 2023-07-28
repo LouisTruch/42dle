@@ -4,7 +4,7 @@ use crate::entities::{prelude::*, *};
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, profile_pic: &String
-) -> Result<InsertResult<users::ActiveModel>, DbErr> {
+    ) -> Result<InsertResult<users::ActiveModel>, DbErr> {  
 
     // Create a record to add in db
     let record = users::ActiveModel {
@@ -21,7 +21,7 @@ pub async fn new_user(
 pub async fn update_user_by_login(
     db: &DatabaseConnection,
     data: users::Model,
-) -> Result<users::Model, DbErr> {
+    ) -> Result<users::Model, DbErr> {
 
     // Find users in db with login ( primary key ) and update with new score
     let users: users::ActiveModel = Users::find_by_id(data.login)

@@ -10,8 +10,6 @@ pub async fn new_user(
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
-        score: Set(Some(0)),
-        r#try: Set([].to_vec()),
         ..Default::default()
     };
 
@@ -41,8 +39,8 @@ pub async fn update_try_by_login(
     // Find users in db with login ( primary key ) and update with new try
     let users: Option<users::Model>  = Users::find_by_id(login).one(db).await?;
     let mut users: users::ActiveModel = users.unwrap().into();
-    // let try_vec: Vec<String> = users.r#try;
-    // try_vec.push(new_try.to_string());
-    // users.r#try = try_vec;
+    let mut new_vec: Vec<String> = users.r#try.unwrap().into();
+    new_vec.push(new_try.to_string());
+    users.r#try = Set(new_vec);
     users.update(db).await
 }

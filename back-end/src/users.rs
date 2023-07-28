@@ -10,7 +10,6 @@ pub async fn new_user(
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
-        score: Set(Some(0)),
         ..Default::default()
     };
 
@@ -18,24 +17,30 @@ pub async fn new_user(
     Users::insert(record).exec(db).await
 }
 
-pub async fn update_user_by_login(
+pub async fn update_score_by_login(
     db: &DatabaseConnection,
-    data: users::Model,
+    login: &String,
+    new_score: &i32
     ) -> Result<users::Model, DbErr> {
 
     // Find users in db with login ( primary key ) and update with new score
-    let users: users::ActiveModel = Users::find_by_id(data.login)
-        .one(db)
-        .await?
-        .ok_or(DbErr::Custom("Cannot find post.".to_owned()))
-        .map(Into::into)?;
+    let users: Option<users::Model>  = Users::find_by_id(login).one(db).await?;
+    let mut users: users::ActiveModel = users.unwrap().into();
+    users.score = Set(Some(*new_score));
+    users.update(db).await
+}
 
-    // user to update i don't know if its work
-    users::ActiveModel {
-        login: users.login,
-        score: Set(data.score.to_owned()),
-        profile_pic: users.profile_pic,
-    }
-    .update(db)
-    .await
+pub async fn update_try_by_login(
+    db: &DatabaseConnection,
+    login: &String,
+    new_try: &String
+    ) -> Result<users::Model, DbErr> {
+
+    // Find users in db with login ( primary key ) and update with new try
+    let users: Option<users::Model>  = Users::find_by_id(login).one(db).await?;
+    let mut users: users::ActiveModel = users.unwrap().into();
+    let mut new_vec: Vec<String> = users.r#try.unwrap().into();
+    new_vec.push(new_try.to_string());
+    users.r#try = Set(new_vec);
+    users.update(db).await
 }

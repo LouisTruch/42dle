@@ -1,4 +1,3 @@
-use crate::auth::User;
 
 #[get("/", rank = 2)]
 pub fn no_auth_index() -> &'static str {
@@ -6,6 +5,6 @@ pub fn no_auth_index() -> &'static str {
 }
 
 #[get("/")]
-pub fn index(_user: User) -> &'static str {
+pub fn index() -> &'static str {
     "Your are at home logged"
 }

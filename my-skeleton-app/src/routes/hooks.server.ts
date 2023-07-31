@@ -1,15 +1,17 @@
 import { authenticateUser } from '$lib/server/auth';
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleFetch } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	console.log('hooks.server:handle');
 	event.locals.user = authenticateUser(event);
 
 	const response = await resolve(event);
-	console.log(response);
 
 	return response;
 };
 
-export async function externalFetch(request) {
-	console.log(request.headers);
-}
+export const handleFetch = (async ({ event, request, fetch }) => {
+	console.log('hooks.server:handlefetch');
+
+	return fetch(request);
+}) satisfies HandleFetch;

@@ -3,8 +3,6 @@ import { fail, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
 	guess: async ({ request }) => {
-		console.log('test');
-
 		const data = await request.formData();
 		const login = data.get('login');
 		if (!login) {
@@ -14,7 +12,7 @@ export const actions: Actions = {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) {
-		throw redirect(303, '/login');
-	}
+	// if (!locals.user) {
+	// throw redirect(303, '/login');
+	// }
 };

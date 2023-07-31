@@ -1,0 +1,29 @@
+{
+	"users": [
+		{
+			"login": "nlocusso",
+			"score": "99",
+			"profilePic": "https://cdn.intra.42.fr/users/dcc331f2541df2a6e7456204ffc89237/nlocusso.jpg"
+		},
+		{
+			"login": "adamiens",
+			"score": "89",
+			"profilePic": "https://cdn.intra.42.fr/users/f859a9f2483ef863aaa728a520ec95a7/adamiens.jpg"
+		},
+		{
+			"login": "ltruchel",
+			"score": "100",
+			"profilePic": "https://cdn.intra.42.fr/users/1e5eaf4ddd8d0024eed317458a390aff/ltruchel.jpg"
+		},
+		{
+			"login": "eguillau",
+			"score": "59",
+			"profilePic": "https://cdn.intra.42.fr/users/a433f5f1bc430ba4103e6f6481e714b8/eguillau.jpg"
+		},
+		{
+			"login": "averdon",
+			"score": "58",
+			"profilePic": "https://cdn.intra.42.fr/users/739173c54d5b78e743193df8fe3fdb97/averdon.JPG"
+		}
+	]
+}

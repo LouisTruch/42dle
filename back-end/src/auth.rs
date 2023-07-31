@@ -140,7 +140,7 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     match users::new_user(&db, &login, &img).await {
         Ok(_) => println!("User Created!"),
         Err(_e) => {
-            println!("init_session: {_e}");
+            println!("init_sessiontg: {_e}");
             // if let Some(coke) = cookie.get("user_id"){
             //     print!("COOKIE: FOUND -> {}", coke.value().to_string());
             //     return ();

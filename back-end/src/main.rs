@@ -31,11 +31,11 @@ async fn rocket() -> _ {
         .manage(db_conn)
         .attach(Cors)
         .mount("/", routes![
-            auth::tmp,
             index::no_auth_index,
             index::index])
         .mount("/auth", routes![
             auth::init_session, 
+            auth::game_try,
             auth::logout,])
 }
 

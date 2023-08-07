@@ -1,0 +1,7 @@
+{
+	"/": [],
+	"/about": [],
+	"/auth": [
+		"src/routes/auth/+page.ts"
+	]
+}

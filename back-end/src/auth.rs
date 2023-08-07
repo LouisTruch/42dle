@@ -5,7 +5,7 @@ use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-use crate::users;
+use crate::db;
 use rocket::request::*;
 
 #[derive(Deserialize)]
@@ -152,7 +152,7 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     let token = generate_token(code).await;
     let (login, img) = get_user_data(token).await;
     generate_cookie(&login, cookie);
-    match users::new_user(&db, &login, &img).await {
+    match db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
             println!("init_session: {_e}");

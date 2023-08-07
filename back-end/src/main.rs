@@ -1,6 +1,6 @@
 mod auth;
 mod index;
-mod users;
+mod db;
 mod entities;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;

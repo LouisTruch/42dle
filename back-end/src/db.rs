@@ -1,18 +1,31 @@
+use rocket::http::ext::IntoCollection;
 use sea_orm::*;
+use std::env;
 use crate::entities::{prelude::*, *};
 
 
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, 
-    profile_pic: &String
+    profile_pic: &String,
+    _tokenApi: String
     ) -> Result<InsertResult<users::ActiveModel>, DbErr> {  
 
     // match Users::find_by_id(login).one(db).await {
     //     Ok(user) => return user,
     //     Err(_) => {} 
     // }
-    
+
+    // Check if the new user is an admin
+    let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
+    let admin_name: Vec<&str> = admin_list.split(";").collect();
+    let api42token = if admin_name.contains(&&login.as_str()){
+        _tokenApi
+    } else {
+        String::new()
+    };
+    println!("api token: {}", api42token);
+
     // Create a record to add in users table
     let record = users::ActiveModel {
         login: Set(login.to_owned()),

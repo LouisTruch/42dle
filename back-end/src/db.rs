@@ -40,6 +40,7 @@ pub async fn update_try_by_login(
 
     let game: Option<game::Model> = Game::find_by_id(1).one(db).await?;
     let mut game: game::ActiveModel = game.unwrap().into();
+    
     // Check if try is equal to login of the day
     let find_login: String = game.login_to_find.unwrap().into();
     if new_try == &find_login {

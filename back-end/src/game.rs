@@ -3,7 +3,7 @@ use rocket::http::CookieJar;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize};
 use rocket::form::Form;
-use crate::db;
+use crate::db::{self, get_campus_users};
 use crate::auth::{Token, ImageData};
 use rand::Rng;
 
@@ -68,15 +68,6 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
         }
     }
     users
-}
-
-pub fn new_target(){
-    // let students = students_lists();
-    let mut rng = rand::thread_rng();
-    let index = rng.gen_range(0..students.len());
-
-    
-    
 }
 
 #[post("/", data = "<data>")]

@@ -5,6 +5,7 @@ use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
+use crate::game::{get_users_campus, CampusUsers};
 use crate::{db, game};
 use rocket::request::*;
 
@@ -113,9 +114,9 @@ pub async fn get_user_data(token: String) -> (String, String) {
     return (res.login, res.image.versions.medium);
 }
 
-fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
+fn generate_cookie(value: &String, cookie: &CookieJar<'_>, name: String) -> (){
     // Create new cookie with user_id as name and login as value
-    let mut new_cookie = Cookie::new("user_id", login.clone());
+    let mut new_cookie = Cookie::new(name, value.clone());
     // set cookie to be lax with SameSite
     // new_cookie.secure();
     new_cookie.set_secure(false);
@@ -130,6 +131,15 @@ fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
     cookie.add_private(new_cookie);
 }
 
+fn generate_admin_cookie(token: &String, cookie: &CookieJar<'_>, login: &String){
+    // Check if the new user is an admin
+    let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
+    let admin_name: Vec<&str> = admin_list.split(";").collect();
+    if admin_name.contains(&&login.as_str()){
+        generate_cookie(&token, cookie, String::from("token"));
+    }
+}
+
 /*
     1) Exchange the code provided by the  frontend's query for a token returned by 42's api
     2) This token is used to retrieve the login & pp of the user who sent the code
@@ -141,9 +151,6 @@ fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     match token {
         Some(cookie) => {
-            //Need to be removed
-            // let a = game::generate_target();
-            // a.await;
             println!("ALREADY A COOKIE FOR: {}", cookie.user_id);
             return ();
         }
@@ -153,9 +160,9 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     }
 
     let token = generate_token(code).await;
-    println!("TOKen: {token}");
     let (login, img) = get_user_data(token.clone()).await;
-    generate_cookie(&login, cookie);
+    generate_admin_cookie(&token, cookie, &login);
+    generate_cookie(&login, cookie, String::from("user_id"));
     match db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
@@ -175,6 +182,20 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
         }
         None => {
             println!("You can't logout");
+        }
+    }
+}
+
+#[get("/update-db>")]
+pub async fn update_db(token: Option<Token>, jar: &CookieJar<'_>) {
+    match token {
+        Some(_login) => {
+            let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
+            let users_campus: Vec<CampusUsers> = get_users_campus(api42token).await;
+            //NATHAN MET TA FONCTION QUI PREND EN PARAM UN VEC DE CAMPUS USERS
+        }
+        None => {
+            println!("You are not log in.");
         }
     }
 }

@@ -13,7 +13,7 @@ pub struct NewTry {
 }
 
 #[derive(Deserialize)]
-struct CampusUsers {
+pub struct CampusUsers {
     login: String,
     first_name: String,
     last_name: String,
@@ -24,8 +24,7 @@ struct CampusUsers {
     active: bool,
 }
 
-pub async fn get_users_campus () -> Vec<CampusUsers>{
-    let token = "dcdf07068144ad18c6ba0a3638e25121aae309a0e11ad28c3ccf9bbf3542f34e";
+pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
     let mut users: Vec<CampusUsers> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();

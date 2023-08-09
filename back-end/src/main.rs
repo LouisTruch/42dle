@@ -41,7 +41,8 @@ async fn rocket() -> _ {
         .mount("/auth", routes![
             auth::init_session, 
             auth::game_try,
-            auth::logout,])
+            auth::logout,
+            auth::update_db,])
 }
 
 pub struct Cors;

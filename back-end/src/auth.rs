@@ -1,34 +1,12 @@
 use std::env;
-use reqwest::Response;
-use rocket::request::{self, FromRequest, Request};
+use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-use crate::index;
-use crate::users;
-use jsonwebtoken::Header;
+use crate::db;
 use rocket::request::*;
-
-#[derive(Deserialize, Serialize)]
-pub struct Token{user_id: String}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for Token {
-    type Error = String;
-
-    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        println!("HEADER CONTENT: {:?}", request.headers());
-        for header in request.headers().get("cookie") {
-            println!("COOKIE: {}", header);
-            if let Ok(ret) = serde_json::from_str::<Token>(header){
-                return Outcome::Success(ret);                
-            }
-        }
-        return Outcome::Failure((Status::from_code(401).unwrap(), "parsing error".to_string()));
-    }
-}
 
 #[derive(Deserialize)]
 struct ApiToken {
@@ -55,9 +33,35 @@ struct ApiData {
     image: ImageData,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct Token{user_id: String}
+
 /*
     CODE BELOW
 */
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Token {
+    type Error = String;
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let cookie_content = request
+        .cookies()
+        .get_private("user_id")
+        .and_then(|cookie| cookie.value().parse().ok())
+        .map(|id| Token{user_id: id}.user_id);
+        match cookie_content {
+            Some(user_id) => {
+                return Outcome::Success(Token { user_id: (user_id) });
+            }
+            None => {
+                return Outcome::Failure(
+                    (Status::from_code(401).unwrap(), "parsing error".to_string())
+                );
+            }
+        }
+    }
+}
 
 async fn generate_token(code: &str, ) -> String{
     // Get informations in .env file to generate request's body for 42's api
@@ -109,9 +113,9 @@ pub async fn get_user_data(token: String) -> (String, String) {
     return (res.login, res.image.versions.medium);
 }
 
-fn generate_cookie(login: String, cookie: &CookieJar<'_>) -> (){
+fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
     // Create new cookie with user_id as name and login as value
-    let mut new_cookie = Cookie::new("user_id", login);
+    let mut new_cookie = Cookie::new("user_id", login.clone());
     // set cookie to be lax with SameSite
     // new_cookie.secure();
     new_cookie.set_secure(false);
@@ -123,7 +127,7 @@ fn generate_cookie(login: String, cookie: &CookieJar<'_>) -> (){
     new_cookie.set_expires(now);
     assert!(new_cookie.expires().is_some());
     // add cookie to cookie jar <3
-    cookie.add(new_cookie);
+    cookie.add_private(new_cookie);
 }
 
 /*
@@ -135,24 +139,26 @@ fn generate_cookie(login: String, cookie: &CookieJar<'_>) -> (){
 */
 #[get("/token/<code>")]
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
+    match token {
+        Some(cookie) => {
+            println!("ALREADY A COOKIE FOR: {}", cookie.user_id);
+            return ();
+        }
+        None => {
+            println!("CREATE NEW COOKIE");
+        }
+    }
+
     let token = generate_token(code).await;
-    let (login, img) = get_user_data(token).await;
-    match users::new_user(&db, &login, &img).await {
-        Ok(_) => println!("User Created!"),
+    let (login, img) = get_user_data(token.clone()).await;
+    generate_cookie(&login, cookie);
+    match db::new_user(&db, &login, &img, token).await {
+        Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
-            println!("init_sessiontg: {_e}");
-            // if let Some(coke) = cookie.get("user_id"){
-            //     print!("COOKIE: FOUND -> {}", coke.value().to_string());
-            //     return ();
-            // }else {
-            //     print!("COOKIE: NOT FOUND");
-            // };
-            // println!("Cookie value: {}", coke.value().to_string());
-            generate_cookie(login, cookie);
+            println!("init_session: {_e}");
             return ();
         }
     };
-    generate_cookie(login, cookie)
 }
 
 // #[get("/check-cookie")]
@@ -168,30 +174,28 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
 // }
 
 #[get("/logout")]
-pub fn logout(jar: &CookieJar<'_>) {
-    let coke = jar.get_private("user_id").unwrap().clone();
-    println!("Cookie value: {}", coke.value().to_string());
-    jar.remove_private(Cookie::named("user_id"));
+pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
+    match token {
+        Some(_) => {
+            let coke = jar.get_private("user_id").unwrap().clone();
+            println!("Remove session cookie of {}", coke.value().to_string());
+            jar.remove_private(Cookie::named("user_id"));
+        }
+        None => {
+            println!("You can't logout");
+        }
+    }
 }
 
-
-#[get("/aaa")]
-pub async fn tmp(jar: &CookieJar<'_>) -> () {
-    let mut cookie = Cookie::new("user_id", "armand".to_string());
-    cookie.secure();
-    cookie.set_secure(false);
-    cookie.set_same_site(SameSite::Lax);
-    jar.add_private(cookie)
+#[get("/game-try/<add_try>")]
+pub async fn game_try(add_try: &str, token: Option<Token>) {
+    match token {
+        Some(login) => {
+            // new_try(login.user_id, add_try);
+            println!("When new_try func will be coded, {} try {add_try}", login.user_id);
+        }
+        None => {
+            println!("You are not log in.");
+        }
+    }
 }
-
-// #[[get]("/game-try/<try>")]
-// pub async fn game_try(try: &str) -> () {
-//     let login: String;
-
-//     if let Some(ret) = token {
-//         login = ret.user_id;
-//     } else {
-//         return ();
-//     }
-//     //new_try(login, try);
-// }

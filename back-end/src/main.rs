@@ -1,6 +1,6 @@
 mod auth;
 mod index;
-mod users;
+mod db;
 mod entities;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
@@ -8,6 +8,7 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
+use std::thread;
 
 #[macro_use]
 extern crate rocket;
@@ -27,15 +28,18 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
+    // let child = thread::spawn(move || generate_target());
+    // child.join();
+
     rocket::build()
         .manage(db_conn)
         .attach(Cors)
         .mount("/", routes![
-            auth::tmp,
             index::no_auth_index,
             index::index])
         .mount("/auth", routes![
             auth::init_session, 
+            auth::game_try,
             auth::logout,])
 }
 

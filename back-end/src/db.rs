@@ -1,5 +1,5 @@
 use sea_orm::*;
-use crate::entities::{prelude::*, *};
+use crate::{entities::{prelude::*, *}, game::CampusStudent};
 
 pub async fn new_user(
     db: &DatabaseConnection,
@@ -112,11 +112,11 @@ pub async fn new_day(
     Game::insert(new_day).exec(db).await
 }
 
-// pub async fn update_campus_user(
-//     db: &DatabaseConnection,
-//     campus_users: Vec<>
-// ) {
-//     for user in campus_users {
-//         CampusUsers::insert(user).exec(db).await;
-//     }
-// }
+pub async fn update_campus_user(
+    db: &DatabaseConnection,
+    campus_users: Vec<CampusStudent>
+) {
+    for user in campus_users {
+        CampusUsers::insert(user).exec(db).await;
+    }
+}

@@ -13,7 +13,7 @@ pub struct NewTry {
 }
 
 #[derive(Deserialize)]
-pub struct CampusUsers {
+pub struct CampusStudent {
     login: String,
     first_name: String,
     last_name: String,
@@ -24,8 +24,8 @@ pub struct CampusUsers {
     active: bool,
 }
 
-pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
-    let mut users: Vec<CampusUsers> = Vec::new();
+pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
+    let mut users: Vec<CampusStudent> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
@@ -55,7 +55,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
             .send()
             .await
             .expect("get_users_campus: Response from 42's api failed")
-            .json::<Vec<CampusUsers>>()
+            .json::<Vec<CampusStudent>>()
             .await
             .expect("get_users_campus: Parse the response from 42's api failed");
 

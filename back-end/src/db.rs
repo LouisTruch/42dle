@@ -38,8 +38,8 @@ pub async fn new_user(
 
 pub async fn update_try_by_login(
     db: &DatabaseConnection,
-    login: &String,
-    new_try: &String
+    login: String,
+    new_try: String
     ) -> Result<users::Model, DbErr> {
 
     // Find users in db with login ( primary key ) and update with new try
@@ -53,7 +53,7 @@ pub async fn update_try_by_login(
     
     // Check if try is equal to login of the day
     let find_login: String = game.login_to_find.unwrap().into();
-    if new_try == &find_login {
+    if new_try == find_login {
 
         // add score for the win !
         let nb_score: i32 = users.score.unwrap().into();

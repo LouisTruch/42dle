@@ -1,5 +1,4 @@
 use std::env;
-use rocket::data::FromData;
 use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
@@ -8,21 +7,20 @@ use sea_orm::DatabaseConnection;
 use rocket::State;
 use crate::{db, game};
 use rocket::request::*;
-use rocket::outcome::Outcome::{Success, Failure};
 
 #[derive(Deserialize)]
-struct ApiToken {
+pub struct ApiToken {
     access_token: String,
 }
 
 #[derive(Deserialize)]
-struct ImageData {
+pub struct ImageData {
     // link: String,
     versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
-struct ImageVersions {
+pub struct ImageVersions {
     // large: String,
     medium: String,
     // small: String,
@@ -180,17 +178,3 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
         }
     }
 }
-
-// #[post("/game", data = "<input>")]
-// pub async fn game_try(input: Try, token: Option<Token>) {
-//     println!("{}", input.login);
-//     match token {
-//         Some(login) => {
-//             // new_try(login.user_id, add_try);
-//             println!("When new_try func will be coded, {} try {add_try}", login.user_id);
-//         }
-//         None => {
-//             println!("You are not log in.");
-//         }
-//     }
-// }

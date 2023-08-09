@@ -3,13 +3,14 @@ mod index;
 mod db;
 mod entities;
 mod game;
+use chrono::{Local, Duration};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
-use std::thread;
+use std::thread::{self, sleep};
 
 #[macro_use]
 extern crate rocket;
@@ -29,8 +30,7 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    // let child = thread::spawn(move || generate_target());
-    // child.join();
+    let child = thread::spawn(move || daily_interval());
 
     rocket::build()
         .manage(db_conn)
@@ -45,6 +45,20 @@ async fn rocket() -> _ {
             game::game_try,
             game::update_db,
         ])
+}
+
+fn daily_interval(){
+    loop {
+        let time_now = Local::now();
+
+        let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
+
+        let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
+
+        sleep(duration);
+        println!("NEW TARGET GENERATED")
+        // new_day();
+    }
 }
 
 pub struct Cors;

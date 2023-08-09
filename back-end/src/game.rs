@@ -60,5 +60,10 @@ pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
 
         users.extend(campus_users);
     }
+    for i in 0..users.len(){
+        if users[i].alumni == true || users[i].active == false{
+            users.remove(i);
+        }
+    }
     users
 }

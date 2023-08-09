@@ -5,6 +5,7 @@ use serde::{Deserialize};
 use rocket::form::Form;
 use crate::db;
 use crate::auth::{Token, ImageData};
+use rand::Rng;
 
 
 #[derive(FromForm)]
@@ -69,6 +70,14 @@ pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
     users
 }
 
+pub fn new_target(){
+    // let students = students_lists();
+    let mut rng = rand::thread_rng();
+    let index = rng.gen_range(0..students.len());
+
+    
+    
+}
 
 #[post("/", data = "<data>")]
 pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>, token: Option<Token>) {

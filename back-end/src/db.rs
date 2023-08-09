@@ -1,13 +1,11 @@
 use sea_orm::*;
-use std::env;
 use crate::entities::{prelude::*, *};
-
 
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, 
     profile_pic: &String,
-    _tokenApi: String
+    // token_api: &String
     ) -> Result<InsertResult<users::ActiveModel>, DbErr> {  
 
     // match Users::find_by_id(login).one(db).await {
@@ -29,7 +27,7 @@ pub async fn new_user(
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
-        r#try: Set([].to_vec()),
+        r#try: Set(vec![]),
         ..Default::default()
     };
 
@@ -50,8 +48,9 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
-    let game: Option<game::Model> = Game::find_by_id(1).one(db).await?;
+    let game: Option<game::Model> = Game::find_by_id(1).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.unwrap().into();
+    
     // Check if try is equal to login of the day
     let find_login: String = game.login_to_find.unwrap().into();
     if new_try == &find_login {
@@ -112,3 +111,12 @@ pub async fn new_day(
     // Insert in game tables and return the Result
     Game::insert(new_day).exec(db).await
 }
+
+// pub async fn update_campus_user(
+//     db: &DatabaseConnection,
+//     campus_users: Vec<>
+// ) {
+//     for user in campus_users {
+//         CampusUsers::insert(user).exec(db).await;
+//     }
+// }

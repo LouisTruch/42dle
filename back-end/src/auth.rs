@@ -1,4 +1,5 @@
 use std::env;
+use rocket::data::FromData;
 use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
@@ -8,6 +9,7 @@ use rocket::State;
 use crate::game::{get_users_campus, CampusUsers};
 use crate::{db, game};
 use rocket::request::*;
+use rocket::outcome::Outcome::{Success, Failure};
 
 #[derive(Deserialize)]
 struct ApiToken {
@@ -163,7 +165,7 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     let (login, img) = get_user_data(token.clone()).await;
     generate_admin_cookie(&token, cookie, &login);
     generate_cookie(&login, cookie, String::from("user_id"));
-    match db::new_user(&db, &login, &img, token).await {
+    match db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
             println!("init_session: {_e}");

@@ -42,7 +42,8 @@ async fn rocket() -> _ {
             auth::init_session, 
             auth::game_try,
             auth::logout,
-            auth::update_db,])
+            auth::update_db,
+            auth::logout,])
 }
 
 pub struct Cors;

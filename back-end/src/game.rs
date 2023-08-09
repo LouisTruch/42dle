@@ -1,10 +1,13 @@
 use rocket::State;
 use rocket::http::CookieJar;
+use std::time::Duration;
+use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize};
 use rocket::form::Form;
 use crate::db;
 use crate::auth::{Token, ImageData};
+use std::thread;
 
 
 #[derive(FromForm)]
@@ -17,11 +20,11 @@ pub struct CampusStudent {
     pub login: String,
     pub first_name: String,
     pub last_name: String,
-    pub image: ImageData,
-    #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
-    alumni: bool,
-    #[serde(rename = "active?")]  // Rename the field to match the JSON key
-    active: bool,
+    // pub image: ImageData,
+    // #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
+    // alumni: bool,
+    // #[serde(rename = "active?")]  // Rename the field to match the JSON key
+    // active: bool,
 }
 
 pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
@@ -46,10 +49,11 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     .parse::<f32>()
     .unwrap() / 100.0).ceil() as i32;
 
-    for i in 0..nb_pages{
-        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=X+").to_owned();
+    println!("{}", bearer);
+    for i in 1..=nb_pages{
+        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
-
+        println!("{}", url);
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()
@@ -60,11 +64,11 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
             .expect("get_users_campus: Parse the response from 42's api failed");
 
         users.extend(campus_users);
+        sleep(Duration::from_millis(600)).await;
     }
-    // for mut i in 0..users.len(){
+    // for i in 0..users.len(){
     //     if users[i].alumni == true || users[i].active == false{
     //         users.remove(i);
-    //         i = i - 1;       
     //     }
     // }
     users

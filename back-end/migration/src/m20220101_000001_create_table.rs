@@ -46,8 +46,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                 .table(CampusUsers::Table)
                 .if_not_exists()
-                .col(ColumnDef::new(CampusUsers::Id).integer().not_null().primary_key().auto_increment())
-                .col(ColumnDef::new(CampusUsers::Login).string().not_null())
+                .col(ColumnDef::new(CampusUsers::Login).string().not_null().primary_key())
                 .col(ColumnDef::new(CampusUsers::FirstName).string().not_null())
                 .col(ColumnDef::new(CampusUsers::LastName).string().not_null())
                 .col(ColumnDef::new(CampusUsers::ProfilePic).string().not_null())
@@ -99,7 +98,6 @@ enum Game {
 #[derive(Iden)]
 enum CampusUsers {
     Table,
-    Id,
     Login,
     FirstName,
     LastName,

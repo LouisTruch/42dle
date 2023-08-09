@@ -125,12 +125,12 @@ pub async fn update_campus_user(
     db: &DatabaseConnection,
     campus_users: Vec<CampusStudent>
 ) {
-    for user in campus_users {
+    for i in 0..campus_users.len() {
         let record = campus_users::ActiveModel {
-            login: Set(user.login.to_owned()),
-            profile_pic: Set(user.image.versions.medium.to_owned()),
-            first_name: Set(user.first_name.to_owned()),
-            last_name: Set(user.last_name.to_owned()),
+            login: Set(campus_users[i].login.to_owned()),
+            profile_pic: Set("thrne".to_string()),
+            first_name: Set(campus_users[i].first_name.to_owned()),
+            last_name: Set(campus_users[i].last_name.to_owned()),
             ..Default::default()
         }; 
         match CampusUsers::insert(record).exec(db).await {

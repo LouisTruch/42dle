@@ -21,10 +21,10 @@ pub struct CampusStudent {
     pub first_name: String,
     pub last_name: String,
     // pub image: ImageData,
-    // #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
-    // alumni: bool,
-    // #[serde(rename = "active?")]  // Rename the field to match the JSON key
-    // active: bool,
+    #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
+    alumni: bool,
+    #[serde(rename = "active?")]  // Rename the field to match the JSON key
+    active: bool,
 }
 
 pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
@@ -71,6 +71,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     //         users.remove(i);
     //     }
     // }
+
     users
 }
 

@@ -24,6 +24,10 @@ async fn rocket() -> _ {
     };
 
     // Migrate the users table
+    // match Migrator::down(&db_conn, None).await {
+    //     Ok(()) => println!("Migration down done"),
+    //     Err(e) => println!("Migration down failed: {}", e)
+    // };
     match Migrator::up(&db_conn, None).await {
         Ok(()) => println!("Migration done"),
         Err(e) => println!("Migration failed: {}", e)

@@ -186,7 +186,7 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     }
 }
 
-#[get("/update-db>")]
+#[get("/update-db")]
 pub async fn update_db(token: Option<Token>, jar: &CookieJar<'_>) {
     match token {
         Some(_login) => {

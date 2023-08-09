@@ -5,7 +5,7 @@ use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-use crate::db;
+use crate::{db, game};
 use rocket::request::*;
 
 #[derive(Deserialize)]
@@ -141,6 +141,9 @@ fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     match token {
         Some(cookie) => {
+            //Need to be removed
+            // let a = game::generate_target();
+            // a.await;
             println!("ALREADY A COOKIE FOR: {}", cookie.user_id);
             return ();
         }

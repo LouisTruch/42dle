@@ -2,6 +2,7 @@ mod auth;
 mod index;
 mod db;
 mod entities;
+mod game;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use rocket::fairing::{Fairing, Info, Kind};

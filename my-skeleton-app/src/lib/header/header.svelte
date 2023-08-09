@@ -1,5 +1,16 @@
 <script lang="ts">
 	import { AppBar, Avatar } from '@skeletonlabs/skeleton';
+	import { user } from '../../store';
+
+	let userLogin = '';
+	const unsubscribe = user.subscribe((value) => {
+		userLogin = value;
+	});
+	console.log(userLogin);
+
+	async function getUser () {
+		
+	}
 </script>
 
 <AppBar padding="p-2" class="w-full">

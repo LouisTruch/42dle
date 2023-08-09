@@ -133,6 +133,9 @@ pub async fn update_campus_user(
             last_name: Set(user.last_name.to_owned()),
             ..Default::default()
         }; 
-        CampusUsers::insert(record).exec(db).await;
+        match CampusUsers::insert(record).exec(db).await {
+            Ok(_) => println!("User add!"),
+            Err(e) => println!("error {}", e)
+        };
     }
 }

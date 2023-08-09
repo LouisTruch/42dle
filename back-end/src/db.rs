@@ -112,6 +112,15 @@ pub async fn new_day(
     Game::insert(new_day).exec(db).await
 }
 
+pub async fn get_campus_users(
+    db: &DatabaseConnection
+) ->  Result<Vec<campus_users::Model>, DbErr> {
+    
+    CampusUsers::find()
+        .all(db)
+        .await
+}
+
 pub async fn update_campus_user(
     db: &DatabaseConnection,
     campus_users: Vec<CampusStudent>

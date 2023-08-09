@@ -6,11 +6,9 @@
 	const unsubscribe = user.subscribe((value) => {
 		userLogin = value;
 	});
-	console.log(userLogin);
+	// console.log(userLogin);
 
-	async function getUser () {
-		
-	}
+	async function getUser() {}
 </script>
 
 <AppBar padding="p-2" class="w-full">
@@ -29,6 +27,7 @@
 		<h2><a class="hover:!text-primary-600" href="/login">Login</a></h2>
 		<h2 class="px-4 hover:!text-primary-600"><a href="/profile">Profile</a></h2>
 		<h2 class="hover:!text-primary-600"><a href="/game">Game</a></h2>
+		<h2 class="px-4 hover:!text-primary-600"><a href="/admin">Admin</a></h2>
 	</svelte:fragment>
 
 	<svelte:fragment slot="default" />

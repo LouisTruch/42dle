@@ -14,19 +14,19 @@ pub struct NewTry {
 }
 
 #[derive(Deserialize)]
-pub struct CampusUsers {
-    login: String,
-    first_name: String,
-    last_name: String,
-    image: ImageData,
+pub struct CampusStudent {
+    pub login: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub image: ImageData,
     #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
     alumni: bool,
     #[serde(rename = "active?")]  // Rename the field to match the JSON key
     active: bool,
 }
 
-pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
-    let mut users: Vec<CampusUsers> = Vec::new();
+pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
+    let mut users: Vec<CampusStudent> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
@@ -56,7 +56,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
             .send()
             .await
             .expect("get_users_campus: Response from 42's api failed")
-            .json::<Vec<CampusUsers>>()
+            .json::<Vec<CampusStudent>>()
             .await
             .expect("get_users_campus: Parse the response from 42's api failed");
 
@@ -88,6 +88,20 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &
         }
         None => {
             println!("You are not logged in");
+        }
+    }
+}
+
+#[get("/update-db")]
+pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>) {
+    match token {
+        Some(_login) => {
+            let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
+            let users_campus: Vec<CampusStudent> = get_users_campus(api42token).await;
+            db::update_campus_user(&db, users_campus);
+        }
+        None => {
+            println!("You are not log in.");
         }
     }
 }

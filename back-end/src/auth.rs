@@ -17,13 +17,13 @@ pub struct ApiToken {
 #[derive(Deserialize)]
 pub struct ImageData {
     // link: String,
-    versions: ImageVersions,
+    pub versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
 pub struct ImageVersions {
     // large: String,
-    medium: String,
+    pub medium: String,
     // small: String,
     // micro: String,
 }
@@ -182,20 +182,6 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
         }
         None => {
             println!("You can't logout");
-        }
-    }
-}
-
-#[get("/update-db")]
-pub async fn update_db(token: Option<Token>, db: &DatabaseConnection,    jar: &CookieJar<'_>) {
-    match token {
-        Some(_login) => {
-            let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
-            let users_campus: Vec<CampusStudent> = get_users_campus(api42token).await;
-            db::update_campus_user(db, campus_users)
-        }
-        None => {
-            println!("You are not log in.");
         }
     }
 }

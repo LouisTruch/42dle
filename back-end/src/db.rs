@@ -117,6 +117,13 @@ pub async fn update_campus_user(
     campus_users: Vec<CampusStudent>
 ) {
     for user in campus_users {
-        CampusUsers::insert(user).exec(db).await;
+        let record = campus_users::ActiveModel {
+            login: Set(user.login.to_owned()),
+            profile_pic: Set(user.image.versions.medium.to_owned()),
+            first_name: Set(user.first_name.to_owned()),
+            last_name: Set(user.last_name.to_owned()),
+            ..Default::default()
+        }; 
+        CampusUsers::insert(record).exec(db).await;
     }
 }

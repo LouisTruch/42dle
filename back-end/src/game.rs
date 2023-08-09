@@ -14,10 +14,10 @@ pub struct NewTry {
 
 #[derive(Deserialize)]
 pub struct CampusStudent {
-    login: String,
-    first_name: String,
-    last_name: String,
-    image: ImageData,
+    pub login: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub image: ImageData,
     #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
     alumni: bool,
     #[serde(rename = "active?")]  // Rename the field to match the JSON key
@@ -79,6 +79,20 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &
         }
         None => {
             println!("You are not logged in");
+        }
+    }
+}
+
+#[get("/update-db")]
+pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>) {
+    match token {
+        Some(_login) => {
+            let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
+            let users_campus: Vec<CampusStudent> = get_users_campus(api42token).await;
+            db::update_campus_user(&db, users_campus);
+        }
+        None => {
+            println!("You are not log in.");
         }
     }
 }

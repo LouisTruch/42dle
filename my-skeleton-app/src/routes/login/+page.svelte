@@ -9,6 +9,12 @@
 			src="https://miro.medium.com/v2/resize:fit:2400/1*pyTVFh65W-y3JACaqGfIFQ.jpeg"
 		/><span><strong class="text-bg">Login with 42</strong></span></a
 	>
+	<a
+	href="http://localhost:8000/target"
+	class="btn btn-bg variant-filled-primary"
+	data-sveltekit-preload-data="off"
+	><span><strong class="text-bg">generate d b</strong></span></a
+>
 </div>
 
 <!-- <div class="container h-full flex justify-center items-center">

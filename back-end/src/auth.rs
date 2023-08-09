@@ -1,12 +1,14 @@
 use std::env;
+use rocket::data::FromData;
 use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-use crate::db;
+use crate::{db, game};
 use rocket::request::*;
+use rocket::outcome::Outcome::{Success, Failure};
 
 #[derive(Deserialize)]
 struct ApiToken {
@@ -141,6 +143,9 @@ fn generate_cookie(login: &String, cookie: &CookieJar<'_>) -> (){
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     match token {
         Some(cookie) => {
+            //Need to be removed
+            // let a = game::generate_target();
+            // a.await;
             println!("ALREADY A COOKIE FOR: {}", cookie.user_id);
             return ();
         }
@@ -150,9 +155,10 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     }
 
     let token = generate_token(code).await;
+    println!("TOKen: {token}");
     let (login, img) = get_user_data(token.clone()).await;
     generate_cookie(&login, cookie);
-    match db::new_user(&db, &login, &img, token).await {
+    match db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
             println!("init_session: {_e}");
@@ -160,18 +166,6 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
         }
     };
 }
-
-// #[get("/check-cookie")]
-// pub fn check_cookie(login: String, jar: &CookieJar<'_>) -> String{
-//     let coke = jar.get_private("user_id").unwrap().clone();
-//     println!("Cookie value: {}", coke.value().to_string());
-
-//     if (coke.value().to_string() == login){
-//         login
-//     } else {
-//         "".to_string()
-//     }
-// }
 
 #[get("/logout")]
 pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
@@ -187,20 +181,16 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     }
 }
 
-struct Try {
-    login: String,
-}
-
-#[post("/game", data = "<input>")]
-pub async fn game_try(input: Try, token: Option<Token>) {
-    println!("{}", input.login);
-    // match token {
-    //     Some(login) => {
-    //         // new_try(login.user_id, add_try);
-    //         println!("When new_try func will be coded, {} try {add_try}", login.user_id);
-    //     }
-    //     None => {
-    //         println!("You are not log in.");
-    //     }
-    // }
-}
+// #[post("/game", data = "<input>")]
+// pub async fn game_try(input: Try, token: Option<Token>) {
+//     println!("{}", input.login);
+//     match token {
+//         Some(login) => {
+//             // new_try(login.user_id, add_try);
+//             println!("When new_try func will be coded, {} try {add_try}", login.user_id);
+//         }
+//         None => {
+//             println!("You are not log in.");
+//         }
+//     }
+// }

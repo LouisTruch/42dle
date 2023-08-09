@@ -2,6 +2,7 @@ mod auth;
 mod index;
 mod db;
 mod entities;
+mod game;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use rocket::fairing::{Fairing, Info, Kind};
@@ -39,7 +40,7 @@ async fn rocket() -> _ {
             index::index])
         .mount("/auth", routes![
             auth::init_session, 
-            auth::game_try,
+            // auth::game_try,
             auth::logout,])
 }
 

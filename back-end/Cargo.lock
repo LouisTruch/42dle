@@ -304,6 +304,7 @@ dependencies = [
  "jsonwebtoken",
  "migration",
  "postgres",
+ "rand",
  "reqwest",
  "rocket",
  "sea-orm",

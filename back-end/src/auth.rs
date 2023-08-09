@@ -153,6 +153,7 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     }
 
     let token = generate_token(code).await;
+    println!("TOKen: {token}");
     let (login, img) = get_user_data(token.clone()).await;
     generate_cookie(&login, cookie);
     match db::new_user(&db, &login, &img, token).await {
@@ -163,18 +164,6 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
         }
     };
 }
-
-// #[get("/check-cookie")]
-// pub fn check_cookie(login: String, jar: &CookieJar<'_>) -> String{
-//     let coke = jar.get_private("user_id").unwrap().clone();
-//     println!("Cookie value: {}", coke.value().to_string());
-
-//     if (coke.value().to_string() == login){
-//         login
-//     } else {
-//         "".to_string()
-//     }
-// }
 
 #[get("/logout")]
 pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {

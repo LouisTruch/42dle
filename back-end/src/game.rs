@@ -1,27 +1,65 @@
-use rand::Rng;
+use serde::{Deserialize};
 
-pub async fn generate_target (){
-    println!("INSIDE THIS FUNC");
-    let token = "cf16c9c69086c8423a8c6814f93be457f607b6490ef12af5ec1e1eb8de425d4d";
-    // let rng = rand::thread_rng();
+
+#[derive(Deserialize)]
+struct ImageData {
+    versions: ImageVersions,
+}
+
+#[derive(Deserialize)]
+struct ImageVersions {
+    medium: String,
+}
+
+#[derive(Deserialize)]
+struct CampusUsers {
+    login: String,
+    first_name: String,
+    last_name: String,
+    image: ImageData,
+    #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
+    alumni: bool,
+    #[serde(rename = "active?")]  // Rename the field to match the JSON key
+    active: bool,
+}
+
+pub async fn get_users_campus () -> Vec<CampusUsers>{
+    let token = "dcdf07068144ad18c6ba0a3638e25121aae309a0e11ad28c3ccf9bbf3542f34e";
+    let mut users: Vec<CampusUsers> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
 
-    let campus_users = client.get("https://api.intra.42.fr/v2")
-       .header("Authorization", bearer.as_str())
-       .send()
-       .await
-       .expect("generate_token: Response from 42's api failed");
-    println!("CAMPUS: {:?}", campus_users);
-    // let index = rng.gen_range(0..campus_users.len());
-    // let res = client.get("https://api.intra.42.fr/users/{index}")
-    //     .header("Authorization", bearer.as_str())
-    //     .send()
-    //     .await
-    //     .expect("get_user_data: Response from 42's api failed");
-    // println!("User data: {:?}", res);
-//         .json::<newType>()
-//         .await
-//         .expect("get_user_data: Parse the response from 42's api failed");
+    let reponse_campus_users = client.get("https://api.intra.42.fr/v2/campus/31/users?per_page=100")
+    .header("Authorization", bearer.as_str())
+    .send()
+    .await
+    .expect("get_users_campus: Response from 42's api failed");
+
+    let nb_users = reponse_campus_users.headers()
+    .get("X-Total")
+    .expect("get_users_campus token: get X-Total error");
+
+    let nb_pages: i32 = (nb_users
+    .to_str()
+    .expect("get_users_campus: Can't convert the number of user from request into an int")
+    .parse::<f32>()
+    .unwrap() / 100.0).ceil() as i32;
+
+    for i in 0..nb_pages{
+        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=X+").to_owned();
+        url.push_str(&i.to_string());
+
+        let campus_users = client.get(url)
+            .header("Authorization", bearer.as_str())
+            .send()
+            .await
+            .expect("get_users_campus: Response from 42's api failed")
+            .json::<Vec<CampusUsers>>()
+            .await
+            .expect("get_users_campus: Parse the response from 42's api failed");
+
+        users.extend(campus_users);
+    }
+    users
 }

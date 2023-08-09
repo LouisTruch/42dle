@@ -187,15 +187,20 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     }
 }
 
-#[get("/game-try/<add_try>")]
-pub async fn game_try(add_try: &str, token: Option<Token>) {
-    match token {
-        Some(login) => {
-            // new_try(login.user_id, add_try);
-            println!("When new_try func will be coded, {} try {add_try}", login.user_id);
-        }
-        None => {
-            println!("You are not log in.");
-        }
-    }
+struct Try {
+    login: String,
+}
+
+#[post("/game", data = "<input>")]
+pub async fn game_try(input: Try, token: Option<Token>) {
+    println!("{}", input.login);
+    // match token {
+    //     Some(login) => {
+    //         // new_try(login.user_id, add_try);
+    //         println!("When new_try func will be coded, {} try {add_try}", login.user_id);
+    //     }
+    //     None => {
+    //         println!("You are not log in.");
+    //     }
+    // }
 }

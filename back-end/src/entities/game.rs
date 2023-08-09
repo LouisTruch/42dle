@@ -4,7 +4,7 @@
 
 use sea_orm :: entity :: prelude :: * ;
 
-# [derive (Clone , Debug , PartialEq , DeriveEntityModel , Eq)] # [sea_orm (table_name = "game")] pub struct Model { # [sea_orm (primary_key)] pub id : i32 , pub login_to_find : String , pub profile_pic : String , }
+# [derive (Clone , Debug , PartialEq , DeriveEntityModel , Eq)] # [sea_orm (table_name = "game")] pub struct Model { # [sea_orm (primary_key)] pub id : i32 , pub login_to_find : String , pub first_name : String , pub last_name : String , pub profile_pic : String , }
 
 # [derive (Copy , Clone , Debug , EnumIter , DeriveRelation)] pub enum Relation { }
 

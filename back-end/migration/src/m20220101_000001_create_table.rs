@@ -23,7 +23,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Users::Win).boolean().not_null().default(false))
                     .to_owned(),
             )
-            .await.unwrap();
+            .await
+            .unwrap();
 
         manager
             .create_table(
@@ -32,12 +33,28 @@ impl MigrationTrait for Migration {
                 .if_not_exists()
                 .col(ColumnDef::new(Game::Id).integer().not_null().primary_key().auto_increment())
                 .col(ColumnDef::new(Game::LoginToFind).string().not_null())
+                .col(ColumnDef::new(Game::FirstName).string().not_null())
+                .col(ColumnDef::new(Game::LastName).string().not_null())
                 .col(ColumnDef::new(Game::ProfilePic).string().not_null())
                 .to_owned()
             )
             .await
- 
+            .unwrap();
 
+        manager
+            .create_table(
+                Table::create()
+                .table(CampusUsers::Table)
+                .if_not_exists()
+                .col(ColumnDef::new(CampusUsers::Id).integer().not_null().primary_key().auto_increment())
+                .col(ColumnDef::new(CampusUsers::Login).string().not_null())
+                .col(ColumnDef::new(CampusUsers::FirstName).string().not_null())
+                .col(ColumnDef::new(CampusUsers::LastName).string().not_null())
+                .col(ColumnDef::new(CampusUsers::ProfilePic).string().not_null())
+                .to_owned()
+            )
+            .await
+ 
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -48,6 +65,11 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(Game::Table).to_owned())
+            .await
+            .unwrap();
+
+        manager
+            .drop_table(Table::drop().table(CampusUsers::Table).to_owned())
             .await
     }
 }
@@ -69,5 +91,17 @@ enum Game {
     Table,
     Id,
     LoginToFind,
+    FirstName,
+    LastName,
+    ProfilePic,
+}
+
+#[derive(Iden)]
+enum CampusUsers {
+    Table,
+    Id,
+    Login,
+    FirstName,
+    LastName,
     ProfilePic,
 }

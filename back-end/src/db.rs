@@ -1,14 +1,12 @@
-use rocket::http::ext::IntoCollection;
 use sea_orm::*;
 use std::env;
 use crate::entities::{prelude::*, *};
-
 
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, 
     profile_pic: &String,
-    _tokenApi: String
+    token_api: &String
     ) -> Result<InsertResult<users::ActiveModel>, DbErr> {  
 
     // match Users::find_by_id(login).one(db).await {
@@ -19,18 +17,12 @@ pub async fn new_user(
     // Check if the new user is an admin
     let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
     let admin_name: Vec<&str> = admin_list.split(";").collect();
-    let api42token = if admin_name.contains(&&login.as_str()){
-        _tokenApi
-    } else {
-        String::new()
-    };
-    println!("api token: {}", api42token);
 
     // Create a record to add in users table
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
-        r#try: Set([].to_vec()),
+        r#try: Set(vec![]),
         ..Default::default()
     };
 
@@ -51,7 +43,7 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
-    let game: Option<game::Model> = Game::find_by_id(1).one(db).await?;
+    let game: Option<game::Model> = Game::find_by_id(1).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.unwrap().into();
     
     // Check if try is equal to login of the day
@@ -114,3 +106,12 @@ pub async fn new_day(
     // Insert in game tables and return the Result
     Game::insert(new_day).exec(db).await
 }
+
+// pub async fn update_campus_user(
+//     db: &DatabaseConnection,
+//     campus_users: Vec<>
+// ) {
+//     for user in campus_users {
+//         CampusUsers::insert(user).exec(db).await;
+//     }
+// }

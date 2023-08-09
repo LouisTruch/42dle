@@ -1,5 +1,4 @@
 use std::env;
-use rocket::data::FromData;
 use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
 use rocket::time::{Duration, OffsetDateTime};
@@ -9,21 +8,20 @@ use rocket::State;
 use crate::game::{get_users_campus, CampusUsers};
 use crate::{db, game};
 use rocket::request::*;
-use rocket::outcome::Outcome::{Success, Failure};
 
 #[derive(Deserialize)]
-struct ApiToken {
+pub struct ApiToken {
     access_token: String,
 }
 
 #[derive(Deserialize)]
-struct ImageData {
+pub struct ImageData {
     // link: String,
     versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
-struct ImageVersions {
+pub struct ImageVersions {
     // large: String,
     medium: String,
     // small: String,
@@ -188,20 +186,7 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     }
 }
 
-#[get("/game-try/<add_try>")]
-pub async fn game_try(add_try: &str, token: Option<Token>) {
-    match token {
-        Some(login) => {
-            // new_try(login.user_id, add_try);
-            println!("When new_try func will be coded, {} try {add_try}", login.user_id);
-        }
-        None => {
-            println!("You are not log in.");
-        }
-    }
-}
-
-#[get("/update-db")]
+#[get("/update-db>")]
 pub async fn update_db(token: Option<Token>, jar: &CookieJar<'_>) {
     match token {
         Some(_login) => {

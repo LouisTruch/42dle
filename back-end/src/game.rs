@@ -1,14 +1,15 @@
+use rocket::State;
+use rocket::http::CookieJar;
+use sea_orm::DatabaseConnection;
 use serde::{Deserialize};
+use rocket::form::Form;
+use crate::db;
+use crate::auth::{Token, ImageData};
 
 
-#[derive(Deserialize)]
-struct ImageData {
-    versions: ImageVersions,
-}
-
-#[derive(Deserialize)]
-struct ImageVersions {
-    medium: String,
+#[derive(FromForm)]
+pub struct NewTry {
+    login_to_guess: String
 }
 
 #[derive(Deserialize)]
@@ -66,4 +67,18 @@ pub async fn get_users_campus (token: String) -> Vec<CampusUsers>{
         }
     }
     users
+}
+
+
+#[post("/", data = "<data>")]
+pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>, token: Option<Token>) {
+    match token {
+        Some(_) => {
+            let coke = jar.get_private("user_id").unwrap().clone();
+            db::update_try_by_login(&db, coke.value().to_string(), data.login_to_guess.clone()).await;
+        }
+        None => {
+            println!("You are not logged in");
+        }
+    }
 }

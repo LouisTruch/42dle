@@ -44,7 +44,7 @@ pub async fn update_try_by_login(
     new_vec.push(new_try.to_string());
 
     let game: Option<game::Model> = Game::find_by_id(1).one(db).await?; // change it after
-    let mut game: game::ActiveModel = game.unwrap().into();
+    let mut game: game::ActiveModel = game.expect("update_try_by_login: no user to guess").into();
     
     // Check if try is equal to login of the day
     let find_login: String = game.login_to_find.unwrap().into();
@@ -187,6 +187,7 @@ pub async fn new_day(
     };
 
     // Insert in game tables and return the Result
+    Game::delete_by_id(1).exec(db).await?;
     Game::insert(new_day).exec(db).await
 }
 

@@ -1,11 +1,12 @@
 use rocket::State;
 use rocket::http::CookieJar;
+use std::time::Duration;
+use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize};
 use rocket::form::Form;
 use crate::db::{self, get_campus_users};
-use crate::auth::{Token, ImageData};
-use rand::Rng;
+use crate::auth::Token;
 
 
 #[derive(FromForm)]
@@ -14,15 +15,25 @@ pub struct NewTry {
 }
 
 #[derive(Deserialize)]
+pub struct ImageData {
+    pub versions: Option<ImageVersions>,
+}
+
+#[derive(Deserialize)]
+pub struct ImageVersions {
+    pub medium: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub struct CampusStudent {
     pub login: String,
     pub first_name: String,
     pub last_name: String,
-    pub image: ImageData,
+    pub image: Option<ImageData>,
     #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
-    alumni: bool,
+    alumni: Option<bool>,
     #[serde(rename = "active?")]  // Rename the field to match the JSON key
-    active: bool,
+    active: Option<bool>,
 }
 
 pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
@@ -47,10 +58,11 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     .parse::<f32>()
     .unwrap() / 100.0).ceil() as i32;
 
-    for i in 0..nb_pages{
-        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=X+").to_owned();
+    println!("{}", bearer);
+    for i in 1..=nb_pages{
+        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
-
+        println!("{}", url);
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()
@@ -61,11 +73,47 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
             .expect("get_users_campus: Parse the response from 42's api failed");
 
         users.extend(campus_users);
+        sleep(Duration::from_millis(600)).await;
     }
-    for i in 0..users.len(){
-        if users[i].alumni == true || users[i].active == false{
+    let mut i: usize = 0;
+    while i < users.len(){
+        let alumni = match users[i].alumni {
+            Some(val) => {val},
+            None => {true}
+        };
+        let active = match users[i].active {
+            Some(val) => {val},
+            None => {false}
+        };
+        match &users[i].image {
+            Some(img_data) => {
+                match &img_data.versions {
+                    Some(version) => {
+                        match &version.medium {
+                            Some(_img) => {},
+                            None => { 
+                                users.remove(i);
+                                continue;
+                            }
+                        }
+                    },
+                    None => { 
+                        users.remove(i);
+                        continue;
+                    }
+                }
+            },
+            None => { 
+                users.remove(i);
+                continue;
+            }
+        };
+
+        if alumni == true || active == false{
             users.remove(i);
+            continue;
         }
+        i = i + 1;
     }
     users
 }
@@ -89,7 +137,7 @@ pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar
         Some(_login) => {
             let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
             let users_campus: Vec<CampusStudent> = get_users_campus(api42token).await;
-            db::update_campus_user(&db, users_campus);
+            db::update_campus_user(&db, users_campus).await;
         }
         None => {
             println!("You are not log in.");

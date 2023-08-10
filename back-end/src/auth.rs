@@ -16,16 +16,12 @@ pub struct ApiToken {
 
 #[derive(Deserialize)]
 pub struct ImageData {
-    // link: String,
     pub versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
 pub struct ImageVersions {
-    // large: String,
     pub medium: String,
-    // small: String,
-    // micro: String,
 }
 
 #[derive(Deserialize)]

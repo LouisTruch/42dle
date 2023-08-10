@@ -1,6 +1,8 @@
 use sea_orm::*;
 use crate::{entities::{prelude::*, *}, game::CampusStudent};
-use rand::Rng;
+use rand::{Rng, rngs::StdRng, SeedableRng};
+use reqwest;
+use image;
 
 
 pub async fn new_user(
@@ -74,14 +76,25 @@ pub async fn get_leaderboard(
         .await
 }
 
+fn generate_images(stud: campus_users::Model){
+    let img_bytes = reqwest::blocking::get(stud.profile_pic)
+    .expect("generate_images: Get request to 42's api for profil pic issue")
+    .bytes()
+    .expect("generate_images: Failure to convert image's reponse to bytes.");
+ 
+    let image = image::load_from_memory(&img_bytes)
+    .expect("generate_images: Fail to load image from memory");
+}
+
 pub async fn new_day(
     db: &DatabaseConnection,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
     let students = get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
-    let mut rng = rand::thread_rng();
+    let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
-    
+
+    generate_images(students[index].clone());
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 

@@ -3,15 +3,17 @@ mod index;
 mod db;
 mod entities;
 mod game;
-// use chrono::{Local, Duration};
-use migration::{Migrator, MigratorTrait};
+use chrono::{Local, Duration};
+use migration::{Migrator, MigratorTrait, SeaRc};
 use sea_orm::{Database, DatabaseConnection};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
 use std::thread::{self, sleep};
-use std::time::Duration;
+// use std::time::Duration;
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 #[macro_use]
 extern crate rocket;
@@ -36,7 +38,7 @@ async fn rocket() -> _ {
     };
 
     let db_clone: DatabaseConnection = db_conn.clone();
-    thread::spawn(move || daily_interval(&db_clone));
+    tokio::spawn(daily_interval(db_clone));
   
     rocket::build()
         .manage(db_conn)
@@ -50,22 +52,32 @@ async fn rocket() -> _ {
         .mount("/game", routes![
             game::game_try,
             game::update_db,
+            game::new_target,
         ])
 
 }
 
-fn daily_interval(db: &DatabaseConnection){
+async fn daily_interval(db: DatabaseConnection) {
+    let portect = Arc::new(Mutex::new(0));
     loop {
-        // let time_now = Local::now();
+        let time_now = Local::now();
 
-        // let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
+        let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
 
-        // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
+        let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
-        // sleep(duration);
-        sleep(Duration::from_millis(5000));
+        sleep(duration);
+        // sleep(Duration::from_millis(5000));
         println!("NEW TARGET GENERATED");
-        db::new_day(db);
+        {
+            let mut mutex = portect.lock().await;
+            match db::new_day(&db).await {
+                Ok(_) => {},
+                Err(e) => {println!("daily_interval: {e}");}
+            }
+            *mutex += 1;
+        }
+
     }
 }
 

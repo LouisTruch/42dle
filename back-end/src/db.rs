@@ -1,7 +1,8 @@
+use rocket::{State, http::{CookieJar, Status}, serde::json::Json};
 use sea_orm::*;
-use crate::{entities::{prelude::*, *}, game::CampusStudent};
+use crate::{entities::{prelude::*, *}, game::CampusStudent, auth::Token};
 use rand::Rng;
-
+use serde::Serialize;
 
 pub async fn new_user(
     db: &DatabaseConnection,
@@ -63,6 +64,25 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
+#[get("/users")]
+pub async fn get_all_users(
+    token: Option<Token>,
+    db: &State<DatabaseConnection>,
+) -> Result<Json<Vec<users::Model>>, Status> {
+    match token {
+        Some(_) => {
+            let db: &DatabaseConnection = &db;
+            match Users::find().all(db).await {
+                Ok(result) => Ok(Json(result)),
+                Err(_) => Ok(Json(vec![]))
+            }
+        }
+    None => {
+            println!("You are not logged in");
+            Ok(Json(vec![]))
+        }
+    }
+}
 
 pub async fn get_leaderboard(
     db: &DatabaseConnection,

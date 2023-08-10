@@ -50,6 +50,7 @@ async fn rocket() -> _ {
         .mount("/game", routes![
             game::game_try,
             game::update_db,
+            db::get_all_users,
         ])
 
 }

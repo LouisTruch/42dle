@@ -118,12 +118,11 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
 }
 
 #[post("/", data = "<data>")]
-pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>, token: Option<Token>) {
+pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token: Option<Token>) {
     match token {
-        Some(_) => {
-            let coke = jar.get_private("user_id").unwrap().clone();
+        Some(cookie) => {
             let _ = db::update_try_by_login(
-                &db, coke.value().to_string(), 
+                &db, cookie.user_id, 
                 data.login_to_guess.clone()
             ).await;
         }
@@ -134,11 +133,10 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &
 }
 
 #[get("/update-db")]
-pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>) {
+pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>) {
     match token {
-        Some(_login) => {
-            let api42token: String = jar.get_private("token").unwrap().clone().value().to_string();
-            let users_campus: Vec<CampusStudent> = get_users_campus(api42token).await;
+        Some(cookie) => {
+            let users_campus: Vec<CampusStudent> = get_users_campus(cookie.user_id).await;
             db::update_campus_user(&db, users_campus).await;
         }
         None => {

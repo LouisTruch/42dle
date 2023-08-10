@@ -33,7 +33,7 @@ struct ApiData {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Token{user_id: String}
+pub struct Token{pub user_id: String}
 
 /*
     CODE BELOW

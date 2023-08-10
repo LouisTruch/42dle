@@ -96,10 +96,10 @@ pub async fn get_user_image(
     let vec: Vec<String> = user.r#try.unwrap().into();
     let mut path_to_image: String = String::from("./images/target_").to_owned();
     if vec.len() < 7 {
-        path_to_image.push_str(&vec.len().to_string());
+        path_to_image.push_str(&(6 - vec.len()).to_string());
     }
     else {
-        path_to_image.push_str("6");
+        path_to_image.push_str("0");
     }
     path_to_image.push_str(".jpeg");
     println!("path: {path_to_image}");

@@ -77,6 +77,12 @@ pub async fn new_day(
     db: &DatabaseConnection,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
+    /*
+    let students = db::get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
+    let mut rng = rand::thread_rng();
+    let index = rng.gen_range(0..students.len());
+    */
+    
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 
@@ -117,7 +123,12 @@ pub async fn update_campus_user(
     for i in 0..campus_users.len() {
         let record = campus_users::ActiveModel {
             login: Set(campus_users[i].login.to_owned()),
-            profile_pic: Set("thrne".to_string()),
+            profile_pic: Set(
+                campus_users[i]
+                .image.as_ref().unwrap()
+                .versions.as_ref().unwrap()
+                .medium.as_ref().unwrap().to_owned().to_string()
+            ),
             first_name: Set(campus_users[i].first_name.to_owned()),
             last_name: Set(campus_users[i].last_name.to_owned()),
             ..Default::default()

@@ -3,11 +3,10 @@ use rocket::http::CookieJar;
 use std::time::Duration;
 use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
-use serde::{Deserialize};
+use serde::Deserialize;
 use rocket::form::Form;
 use crate::db;
-use crate::auth::{Token, ImageData};
-use std::thread;
+use crate::auth::Token;
 
 
 #[derive(FromForm)]
@@ -16,15 +15,25 @@ pub struct NewTry {
 }
 
 #[derive(Deserialize)]
+pub struct ImageData {
+    pub versions: Option<ImageVersions>,
+}
+
+#[derive(Deserialize)]
+pub struct ImageVersions {
+    pub medium: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub struct CampusStudent {
     pub login: String,
     pub first_name: String,
     pub last_name: String,
-    // pub image: ImageData,
+    pub image: Option<ImageData>,
     #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
-    alumni: bool,
+    alumni: Option<bool>,
     #[serde(rename = "active?")]  // Rename the field to match the JSON key
-    active: bool,
+    active: Option<bool>,
 }
 
 pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
@@ -65,22 +74,58 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
         users.extend(campus_users);
         sleep(Duration::from_millis(600)).await;
     }
-    // for i in 0..users.len(){
-    //     if users[i].alumni == true || users[i].active == false{
-    //         users.remove(i);
-    //     }
-    // }
+    let mut i: usize = 0;
+    while i < users.len(){
+        let alumni = match users[i].alumni {
+            Some(val) => {val},
+            None => {true}
+        };
+        let active = match users[i].active {
+            Some(val) => {val},
+            None => {false}
+        };
+        match &users[i].image {
+            Some(img_data) => {
+                match &img_data.versions {
+                    Some(version) => {
+                        match &version.medium {
+                            Some(_img) => {},
+                            None => { 
+                                users.remove(i);
+                                continue;
+                            }
+                        }
+                    },
+                    None => { 
+                        users.remove(i);
+                        continue;
+                    }
+                }
+            },
+            None => { 
+                users.remove(i);
+                continue;
+            }
+        };
 
+        if alumni == true || active == false{
+            users.remove(i);
+            continue;
+        }
+        i = i + 1;
+    }
     users
 }
-
 
 #[post("/", data = "<data>")]
 pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>, token: Option<Token>) {
     match token {
         Some(_) => {
             let coke = jar.get_private("user_id").unwrap().clone();
-            db::update_try_by_login(&db, coke.value().to_string(), data.login_to_guess.clone()).await;
+            let _ = db::update_try_by_login(
+                &db, coke.value().to_string(), 
+                data.login_to_guess.clone()
+            ).await;
         }
         None => {
             println!("You are not logged in");

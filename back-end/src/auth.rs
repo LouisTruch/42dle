@@ -5,8 +5,8 @@ use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-use crate::game::{get_users_campus, CampusStudent};
-use crate::{db, game};
+// use crate::game::{get_users_campus, CampusStudent};
+use crate::db;
 use rocket::request::*;
 
 #[derive(Deserialize)]
@@ -16,16 +16,12 @@ pub struct ApiToken {
 
 #[derive(Deserialize)]
 pub struct ImageData {
-    // link: String,
     pub versions: ImageVersions,
 }
 
 #[derive(Deserialize)]
 pub struct ImageVersions {
-    // large: String,
     pub medium: String,
-    // small: String,
-    // micro: String,
 }
 
 #[derive(Deserialize)]

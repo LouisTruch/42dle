@@ -9,9 +9,9 @@ export const GET = async ({ fetch, request }) => {
 		}
 	}
 
-	const res = await fetch('http://localhost:8000/auth/info', {
+	const res = await fetch('http://localhost:8000/auth/logout', {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});
-	return new Response();
+	return res;
 };

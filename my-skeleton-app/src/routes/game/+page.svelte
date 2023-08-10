@@ -17,7 +17,7 @@
 </script>
 
 <div class="w-80 block justify-center mx-auto items-center border-2 rounded-xl p-2">
-	<img src="https://cdn.intra.42.fr/users/d73b51077c453e8f6df99f3fec5ff3a5/julemart.jpg" alt="a 42 student to guess" />
+	<img src="http://localhost:8000/game/guess-image" alt="a 42 student to guess" />
 	<h1>GAMING</h1>
 	<form method="POST" action="?/guess" use:enhance>
 		<label class="label">

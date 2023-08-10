@@ -18,3 +18,9 @@ export const actions: Actions = {
 		// console.log(res);
 	},
 };
+
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.user) {
+		throw redirect(302, '/login');
+	}
+};

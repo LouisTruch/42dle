@@ -37,8 +37,8 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    let db_clone: DatabaseConnection = db_conn.clone();
-    tokio::spawn(daily_interval(db_clone));
+    // let db_clone: DatabaseConnection = db_conn.clone();
+    // tokio::spawn(daily_interval(db_clone));
   
     rocket::build()
         .manage(db_conn)

@@ -115,6 +115,7 @@ pub async fn update_campus_user(
     db: &DatabaseConnection,
     campus_users: Vec<CampusStudent>
 ) {
+    let mut new_user: i32 = 0;
     for i in 0..campus_users.len() {
         let record = campus_users::ActiveModel {
             login: Set(campus_users[i].login.to_owned()),
@@ -124,8 +125,11 @@ pub async fn update_campus_user(
             ..Default::default()
         }; 
         match CampusUsers::insert(record).exec(db).await {
-            Ok(_) => println!("User add!"),
-            Err(e) => println!("error {}", e)
+            Ok(_) => { println!("Update Campus User --> User add!"); new_user = new_user + 1;},
+            Err(_) => println!("Update Campus User --> User already in db")
         };
+    }
+    if new_user > 0 {
+        println!("{} New Users !", new_user);
     }
 }

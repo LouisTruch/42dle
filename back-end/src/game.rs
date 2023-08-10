@@ -53,7 +53,6 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     for i in 1..=nb_pages{
         let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
-        println!("{}", url);
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()

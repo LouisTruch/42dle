@@ -146,3 +146,20 @@ pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar
         }
     }
 }
+
+#[get("/new-target")]
+pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
+    match token {
+        Some(_login) => {
+            match db::new_day(&db).await {
+                Ok(_) => {},
+                Err(e) => {
+                    println!("new_target: {e}");
+                }
+            }
+        }
+        None => {
+            println!("You are not log in.");
+        }
+    }
+}

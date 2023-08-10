@@ -4,13 +4,16 @@ mod db;
 mod entities;
 mod game;
 use chrono::{Local, Duration};
-use migration::{Migrator, MigratorTrait};
-use sea_orm::Database;
+use migration::{Migrator, MigratorTrait, SeaRc};
+use sea_orm::{Database, DatabaseConnection};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
 use std::thread::{self, sleep};
+// use std::time::Duration;
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 #[macro_use]
 extern crate rocket;
@@ -34,8 +37,9 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    let _child = thread::spawn(move || daily_interval());
-
+    let db_clone: DatabaseConnection = db_conn.clone();
+    tokio::spawn(daily_interval(db_clone));
+  
     rocket::build()
         .manage(db_conn)
         .attach(Cors)
@@ -44,14 +48,20 @@ async fn rocket() -> _ {
             index::index])
         .mount("/auth", routes![
             auth::init_session, 
-            auth::logout,])
+            auth::logout,
+            auth::get_info,
+            ])
         .mount("/game", routes![
             game::game_try,
             game::update_db,
+            game::new_target,
+            db::get_all_users,
         ])
+
 }
 
-fn daily_interval(){
+async fn daily_interval(db: DatabaseConnection) {
+    let portect = Arc::new(Mutex::new(0));
     loop {
         let time_now = Local::now();
 
@@ -60,8 +70,17 @@ fn daily_interval(){
         let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         sleep(duration);
-        println!("NEW TARGET GENERATED")
-        // new_day();
+        // sleep(Duration::from_millis(5000));
+        println!("NEW TARGET GENERATED");
+        {
+            let mut mutex = portect.lock().await;
+            match db::new_day(&db).await {
+                Ok(_) => {},
+                Err(e) => {println!("daily_interval: {e}");}
+            }
+            *mutex += 1;
+        }
+
     }
 }
 

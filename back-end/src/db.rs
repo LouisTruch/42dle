@@ -1,5 +1,9 @@
+use rocket::{State, http::{CookieJar, Status}, serde::json::Json};
 use sea_orm::*;
-use crate::{entities::{prelude::*, *}, game::CampusStudent};
+use rand::{Rng, rngs::StdRng, SeedableRng};
+use reqwest;
+use image;
+use crate::{entities::{prelude::*, *}, game::CampusStudent, auth::Token};
 
 pub async fn new_user(
     db: &DatabaseConnection,
@@ -62,6 +66,26 @@ pub async fn update_try_by_login(
 }
 
 
+#[get("/users")]
+pub async fn get_all_users(
+    token: Option<Token>,
+    db: &State<DatabaseConnection>,
+) -> Result<Json<Vec<users::Model>>, Status> {
+    match token {
+        Some(_) => {
+            let db: &DatabaseConnection = &db;
+            match Users::find().all(db).await {
+                Ok(result) => Ok(Json(result)),
+                Err(_) => Err(Status { code: 404 })
+            }
+        }
+    None => {
+            println!("You are not logged in");
+            Err(Status {code: 401})
+        }
+    }
+}
+
 pub async fn get_leaderboard(
     db: &DatabaseConnection,
 ) -> Result<Vec<users::Model>, DbErr> {
@@ -72,19 +96,25 @@ pub async fn get_leaderboard(
         .await
 }
 
+fn generate_images(stud: campus_users::Model){
+    let img_bytes = reqwest::blocking::get(stud.profile_pic)
+    .expect("generate_images: Get request to 42's api for profil pic issue")
+    .bytes()
+    .expect("generate_images: Failure to convert image's reponse to bytes.");
+ 
+    let image = image::load_from_memory(&img_bytes)
+    .expect("generate_images: Fail to load image from memory");
+}
 
 pub async fn new_day(
     db: &DatabaseConnection,
-    new_login: &String,
-    new_profile_pic: &String,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
-    /*
-    let students = db::get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
-    let mut rng = rand::thread_rng();
+    let students = get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
+    let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
-    */
-    
+
+    generate_images(students[index].clone());
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 
@@ -98,9 +128,12 @@ pub async fn new_day(
     }
 
     // Create a new user to guess to add in game tables
+    println!("{:?}", students[index]);
     let new_day = game::ActiveModel {
-        login_to_find: Set(new_login.to_owned()),
-        profile_pic: Set(new_profile_pic.to_owned()),
+        login_to_find: Set(students[index].login.to_owned()),
+        profile_pic: Set(students[index].profile_pic.to_owned()),
+        first_name: Set(students[index].first_name.to_owned()),
+        last_name: Set(students[index].last_name.to_owned()),
         ..Default::default()
     };
 
@@ -143,4 +176,14 @@ pub async fn update_campus_user(
     if new_user > 0 {
         println!("{} New Users !", new_user);
     }
+}
+
+pub async fn get_user(
+    db: &DatabaseConnection,
+    login: String
+) -> Result<users::Model, DbErr> {
+    
+    let user = Users::find_by_id(login).one(db).await?;
+    let user: users::Model = user.unwrap().into();
+    Ok(user)
 }

@@ -1,12 +1,14 @@
 use std::env;
 use rocket::request::{FromRequest, Request};
 use rocket::http::{Cookie, CookieJar, SameSite, Status};
+use rocket::serde::json::Json;
 use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
 // use crate::game::{get_users_campus, CampusStudent};
 use crate::db;
+use crate::entities::users;
 use rocket::request::*;
 
 #[derive(Deserialize)]
@@ -178,6 +180,24 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
         }
         None => {
             println!("You can't logout");
+        }
+    }
+}
+
+#[get("/info")]
+pub async fn get_info(jar: &CookieJar<'_>, token: Option<Token>, db: &State<DatabaseConnection>
+) -> Result<Json<users::Model>, Status> {
+    match token {
+        Some(_) => {
+            let coke = jar.get_private("user_id").unwrap().clone();
+            match db::get_user(db, coke.value().to_string()).await {
+                Ok(res) => Ok(Json(res)),
+                Err(_) => Err(Status {code: 404})
+            }
+        }
+        None => {
+            println!("You are not logged in");
+            Err(Status {code: 401})
         }
     }
 }

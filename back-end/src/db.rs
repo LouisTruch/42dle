@@ -66,6 +66,7 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
+
 #[get("/users")]
 pub async fn get_all_users(
     token: Option<Token>,
@@ -76,12 +77,12 @@ pub async fn get_all_users(
             let db: &DatabaseConnection = &db;
             match Users::find().all(db).await {
                 Ok(result) => Ok(Json(result)),
-                Err(_) => Ok(Json(vec![]))
+                Err(_) => Err(Status { code: 404 })
             }
         }
     None => {
             println!("You are not logged in");
-            Ok(Json(vec![]))
+            Err(Status {code: 401})
         }
     }
 }
@@ -204,4 +205,14 @@ pub async fn update_campus_user(
     if new_user > 0 {
         println!("{} New Users !", new_user);
     }
+}
+
+pub async fn get_user(
+    db: &DatabaseConnection,
+    login: String
+) -> Result<users::Model, DbErr> {
+    
+    let user = Users::find_by_id(login).one(db).await?;
+    let user: users::Model = user.unwrap().into();
+    Ok(user)
 }

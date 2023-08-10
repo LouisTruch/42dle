@@ -48,7 +48,9 @@ async fn rocket() -> _ {
             index::index])
         .mount("/auth", routes![
             auth::init_session, 
-            auth::logout,])
+            auth::logout,
+            auth::get_info,
+            ])
         .mount("/game", routes![
             game::game_try,
             game::update_db,

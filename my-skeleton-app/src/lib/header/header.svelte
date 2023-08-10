@@ -1,14 +1,9 @@
 <script lang="ts">
 	import { AppBar, Avatar } from '@skeletonlabs/skeleton';
-	import { user } from '../../store';
 
-	let userLogin = '';
-	const unsubscribe = user.subscribe((value) => {
-		userLogin = value;
-	});
-	// console.log(userLogin);
-
-	async function getUser() {}
+	async function handleLogout() {
+		const res = await fetch('/api/logout');
+	}
 </script>
 
 <AppBar padding="p-2" class="w-full">
@@ -28,6 +23,7 @@
 		<h2 class="px-4 hover:!text-primary-600"><a href="/profile">Profile</a></h2>
 		<h2 class="hover:!text-primary-600"><a href="/game">Game</a></h2>
 		<h2 class="px-4 hover:!text-primary-600"><a href="/admin">Admin</a></h2>
+		<btn on:click={handleLogout}><h2 class="hover:!text-primary-600">Logout</h2></btn>
 	</svelte:fragment>
 
 	<svelte:fragment slot="default" />

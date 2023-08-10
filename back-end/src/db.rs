@@ -75,8 +75,6 @@ pub async fn get_leaderboard(
 
 pub async fn new_day(
     db: &DatabaseConnection,
-    new_login: &String,
-    new_profile_pic: &String,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
     // Get all users
@@ -93,8 +91,8 @@ pub async fn new_day(
 
     // Create a new user to guess to add in game tables
     let new_day = game::ActiveModel {
-        login_to_find: Set(new_login.to_owned()),
-        profile_pic: Set(new_profile_pic.to_owned()),
+        // login_to_find: Set(new_login.to_owned()),
+        // profile_pic: Set(new_profile_pic.to_owned()),
         ..Default::default()
     };
 

@@ -107,7 +107,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
             }
         };
 
-        if alumni == true || active == false{
+        if alumni == true || active == false || users[i].last_name == "Angoule" || users[i].last_name == "Angouleme"{
             users.remove(i);
             continue;
         }

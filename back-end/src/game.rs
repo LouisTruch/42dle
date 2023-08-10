@@ -1,11 +1,8 @@
-use rocket::State;
-use rocket::http::{CookieJar, Status};
-use rocket::serde::json::Json;
+use rocket::{State, http::Status, serde::json::Json, tokio::time::sleep, form::Form};
 use std::time::Duration;
-use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;
-use rocket::form::Form;
+
 use crate::db;
 use crate::auth::Token;
 use crate::entities::users;

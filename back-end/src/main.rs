@@ -50,6 +50,7 @@ async fn rocket() -> _ {
             auth::init_session, 
             auth::logout,
             auth::get_info,
+            auth::is_admin,
             ])
         .mount("/game", routes![
             game::game_try,

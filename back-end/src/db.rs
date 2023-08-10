@@ -107,7 +107,7 @@ pub async fn get_user_image(
     Ok(image_data)
 }
 
-pub async fn get_leaderboard(
+pub async fn leaderboard(
     db: &DatabaseConnection,
 ) -> Result<Vec<users::Model>, DbErr> {
 

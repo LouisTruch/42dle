@@ -37,8 +37,8 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    // let db_clone: DatabaseConnection = db_conn.clone();
-    // tokio::spawn(daily_interval(db_clone));
+    let db_clone: DatabaseConnection = db_conn.clone();
+    tokio::spawn(daily_interval(db_clone));
   
     rocket::build()
         .manage(db_conn)
@@ -72,7 +72,7 @@ async fn daily_interval(db: DatabaseConnection) {
         // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         // sleep(duration);
-        sleep(Duration::from_millis(10000));
+        sleep(Duration::from_millis(30000));
         println!("NEW TARGET GENERATED");
         {
             let mut mutex = portect.lock().await;

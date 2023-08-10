@@ -75,14 +75,8 @@ async fn daily_interval(db: DatabaseConnection) {
         sleep(Duration::from_millis(30000));
         println!("NEW TARGET GENERATED");
         {
-            let mut mutex = portect.lock().await;
-            match db::new_day(&db).await {
-                Ok(_) => {},
-                Err(e) => {println!("daily_interval: {e}");}
-            }
-            *mutex += 1;
+            db::new_day(&db).await;
         }
-
     }
 }
 

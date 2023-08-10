@@ -32,7 +32,3 @@ async function getUserInfo(event: any) {
 		profile_pic: '',
 	};
 }
-// export const handleFetch = (async ({ event, request, fetch }) => {
-// 	console.log('hooks.server:handlefetch');
-// 	return fetch(request);
-// }) satisfies HandleFetch;

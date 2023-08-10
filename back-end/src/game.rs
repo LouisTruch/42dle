@@ -170,7 +170,7 @@ pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection
     match token {
         Some(_login) => {
             let coke = jar.get_private("user_id").unwrap().clone();
-            match db::get_user_image(&db, coke.value().to_string()).await {
+            match db::get_user_image(&db, "nlocusso".to_string()).await {
                 Ok(res) => Ok(res),
                 Err(_) => {
                     println!("get_guess_image: failed to load image");

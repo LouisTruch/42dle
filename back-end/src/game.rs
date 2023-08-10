@@ -1,4 +1,6 @@
+use rocket::http::CookieJar;
 use rocket::{State, http::Status, serde::json::Json, tokio::time::sleep, form::Form};
+use std::env;
 use std::time::Duration;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;
@@ -107,7 +109,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
             }
         };
 
-        if alumni == true || active == false{
+        if alumni == true || active == false || users[i].last_name == "Angoule" || users[i].last_name == "Angouleme"{
             users.remove(i);
             continue;
         }
@@ -132,10 +134,11 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token:
 }
 
 #[get("/update-db")]
-pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>) {
+pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>) {
     match token {
-        Some(cookie) => {
-            let users_campus: Vec<CampusStudent> = get_users_campus(cookie.user_id).await;
+        Some(_cookie) => {
+            let coke = jar.get_private("token").unwrap().clone();
+            let users_campus: Vec<CampusStudent> = get_users_campus(coke.value().to_string()).await;
             db::update_campus_user(&db, users_campus).await;
         }
         None => {
@@ -196,3 +199,22 @@ pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection
         }
     }
 }
+
+// #[get("/admin")]
+// pub async fn is_admin(token: Option<Token>) -> Result<bool, Status> {
+//     match token {
+//         Some(login) => {
+//             let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
+//             let admin_name: Vec<&str> = admin_list.split(";").collect();
+//             if admin_name.contains(&&login.user_id.as_str()){
+//                 Ok(true)
+//             } else {
+//                 Err(Status { code: 403 })
+//             }
+//         }
+//         None => {
+//             println!("is_admin: You are not log in.");
+//             Err(Status { code: 401 })
+//         }
+//     }
+// }

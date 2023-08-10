@@ -32,7 +32,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                 .table(Game::Table)
                 .if_not_exists()
-                .col(ColumnDef::new(Game::Id).integer().not_null().primary_key().auto_increment())
+                .col(ColumnDef::new(Game::Id).integer().not_null().primary_key().default(1))
                 .col(ColumnDef::new(Game::LoginToFind).string().not_null())
                 .col(ColumnDef::new(Game::FirstName).string().not_null())
                 .col(ColumnDef::new(Game::LastName).string().not_null())

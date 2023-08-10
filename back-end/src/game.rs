@@ -123,7 +123,7 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token:
     match token {
         Some(cookie) => {
             let _ = db::update_try_by_login(
-                &db, cookie.user_id, 
+                &db, "nlocusso".to_string(), 
                 data.login_to_guess.clone()
             ).await;
         }

@@ -50,6 +50,7 @@ async fn rocket() -> _ {
             auth::init_session, 
             auth::logout,
             auth::get_info,
+            auth::is_admin,
             ])
         .mount("/game", routes![
             game::game_try,
@@ -75,14 +76,8 @@ async fn daily_interval(db: DatabaseConnection) {
         sleep(Duration::from_millis(10000));
         println!("NEW TARGET GENERATED");
         {
-            let mut mutex = portect.lock().await;
-            match db::new_day(&db).await {
-                Ok(_) => {},
-                Err(e) => {println!("daily_interval: {e}");}
-            }
-            *mutex += 1;
+            db::new_day(&db).await;
         }
-
     }
 }
 

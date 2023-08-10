@@ -6,6 +6,7 @@ declare namespace App {
 		user: {
 			login: string;
 			profile_pic: string;
+			isAdmin: boolean;
 		};
 	}
 	// interface PageData {}

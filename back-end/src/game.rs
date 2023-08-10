@@ -200,21 +200,3 @@ pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection
     }
 }
 
-#[get("/admin")]
-pub async fn is_admin(token: Option<Token>) -> Result<Json<bool>, Status> {
-    match token {
-        Some(login) => {
-            let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
-            let admin_name: Vec<&str> = admin_list.split(";").collect();
-            if admin_name.contains(&&login.user_id.as_str()){
-                Ok(Json(true))
-            } else {
-                Err(Status { code: 403 })
-            }
-        }
-        None => {
-            println!("is_admin: You are not log in.");
-            Err(Status { code: 401 })
-        }
-    }
-}

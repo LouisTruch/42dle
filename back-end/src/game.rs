@@ -1,5 +1,6 @@
 use rocket::State;
 use rocket::http::{CookieJar, Status};
+use rocket::serde::json::Json;
 use std::time::Duration;
 use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
@@ -7,6 +8,7 @@ use serde::Deserialize;
 use rocket::form::Form;
 use crate::db;
 use crate::auth::Token;
+use crate::entities::users;
 
 
 #[derive(FromForm)]
@@ -176,6 +178,23 @@ pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection
         }
         None => {
             println!("get_guess_image: You are not log in.");
+            Err(Status { code: 401 })
+        }
+    }
+}
+
+#[get("/leaderboard")]
+pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection>
+) -> Result<Json<Vec<users::Model>>, Status> {
+    match token {
+        Some(_login) => {
+            match db::leaderboard(db).await {
+                Ok(res) => Ok(Json(res)),
+                Err(_) => Err(Status { code: 404 })
+            }
+        }
+        None => {
+            println!("get_leaderboard: You are not log in.");
             Err(Status { code: 401 })
         }
     }

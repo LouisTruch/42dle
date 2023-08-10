@@ -15,7 +15,7 @@ export const actions: Actions = {
 				'x-sveltekit-action': 'true',
 			},
 		});
-		// console.log(res);
+		console.log(res);
 	},
 };
 

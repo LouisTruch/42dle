@@ -14,19 +14,27 @@
 		body: '',
 		buttonTextCancel: 'Close',
 	};
+
+	let imgSrc = 'http://localhost:8000/game/guess-image?';
+	$: cacheImgSrc = imgSrc;
+
+	function handleClick() {
+		// Cache breaker to force the browser to make the request on imgSrc again
+		$: cacheImgSrc = imgSrc + new Date().getTime();
+	}
 </script>
 
 <div class="w-80 block justify-center mx-auto items-center border-2 rounded-xl p-2">
-	<img src="http://localhost:8000/game/guess-image" alt="a 42 student to guess" />
-	<h1>GAMING</h1>
+	<img src={cacheImgSrc} alt="a 42 student to guess" />
 	<form method="POST" action="?/guess" use:enhance>
 		<label class="label">
 			<input class="input" name="login" type="text" value={form?.login ?? ''} />
 		</label>
 		{#if form?.missing}<p class="input-error">Missing field</p>{/if}
-		<button>GUESS</button>
+		<button on:click={handleClick} class="btn variant-filled">GUESS STUDENT</button>
 	</form>
 </div>
+
 
 <div class="w-60 block mx-auto table-container">
 	<table class="table table-compact table-interactive">

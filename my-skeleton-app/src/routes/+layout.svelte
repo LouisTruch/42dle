@@ -7,8 +7,12 @@
 	import '../app.postcss';
 
 	import Header from '$lib/header/header.svelte';
-	import { AppShell, Modal, modalStore } from '@skeletonlabs/skeleton';
 	import Footer from '$lib/footer/footer.svelte';
+
+	import { AppShell, Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+	import { storePopup } from '@skeletonlabs/skeleton';
+	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
 <Modal />

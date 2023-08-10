@@ -15,11 +15,11 @@ export const actions: Actions = {
 				'x-sveltekit-action': 'true',
 			},
 		});
-		console.log(res);
+		// console.log(res);
 	},
 };
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, fetch }) => {
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}

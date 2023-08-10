@@ -9,11 +9,11 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
-use std::thread::sleep;
+// use std::thread::{sleep, self};
 // use chrono::{Local, Duration};
-use std::time::Duration;
-use tokio::sync::Mutex;
-use std::sync::Arc;
+// use std::time::Duration;
+use rocket::tokio::time::{sleep, Duration};
+
 
 #[macro_use]
 extern crate rocket;
@@ -64,7 +64,6 @@ async fn rocket() -> _ {
 }
 
 async fn daily_interval(db: DatabaseConnection) {
-    let portect = Arc::new(Mutex::new(0));
     loop {
         // let time_now = Local::now();
 
@@ -73,10 +72,13 @@ async fn daily_interval(db: DatabaseConnection) {
         // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         // sleep(duration);
-        sleep(Duration::from_millis(10000));
+        sleep(Duration::from_millis(5000)).await;
         println!("NEW TARGET GENERATED");
         {
-            db::new_day(&db).await;
+            match db::new_day(&db).await {
+                Ok(_) => {},
+                Err(e) => {println!("daily_interval: {e}");}
+            } 
         }
     }
 }

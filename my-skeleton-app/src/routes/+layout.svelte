@@ -8,7 +8,6 @@
 
 	import Header from '$lib/header/header.svelte';
 	import { AppShell, Modal, modalStore } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
 	import Footer from '$lib/footer/footer.svelte';
 </script>
 

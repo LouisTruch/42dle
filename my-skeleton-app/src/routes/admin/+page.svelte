@@ -1,7 +1,6 @@
 <script lang="ts">
 	async function handleClick() {
 		const res = await fetch('http://localhost:5173/api/admin/fill-db');
-		console.log(res);
 	}
 	// Need to add alert to let admin know if function worked
 </script>

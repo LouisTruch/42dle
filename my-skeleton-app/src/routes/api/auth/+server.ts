@@ -17,10 +17,10 @@ export async function GET(requestEvent: RequestEvent) {
 			cookies = '';
 		}
 	}
-	const response = await fetch(`http://127.0.0.1:8000/auth/token/${code}`, {
+	const res = await fetch(`http://127.0.0.1:8000/auth/token/${code}`, {
 		method: 'GET',
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});
-	return response;
+	return res;
 }

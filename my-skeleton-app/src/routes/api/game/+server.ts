@@ -12,7 +12,7 @@ export async function POST(requestEvent: RequestEvent) {
 			cookies = '';
 		}
 	}
-	
+
 	const formData = new FormData();
 	formData.append('login_to_guess', 'me');
 	const res = await fetch(`http://127.0.0.1:8000/game/`, {

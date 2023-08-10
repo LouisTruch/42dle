@@ -3,7 +3,6 @@ import type { RequestEvent } from '@sveltejs/kit';
 export async function GET(requestEvent: RequestEvent) {
 	const { fetch, request } = requestEvent;
 
-	console.log(request);
 	let cookies = request.headers.get('cookie');
 	if (cookies == null) {
 		cookies = '';

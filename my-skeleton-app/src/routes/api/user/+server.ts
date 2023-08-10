@@ -13,5 +13,6 @@ export const GET = async ({ fetch, request }) => {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});
-	return new Response();
+
+	return res;
 };

@@ -4,8 +4,8 @@
 declare namespace App {
 	interface Locals {
 		user: {
-			login: string | null;
-			profilePic: string | null;
+			login: string;
+			profile_pic: string;
 		};
 	}
 	// interface PageData {}

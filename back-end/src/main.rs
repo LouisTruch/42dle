@@ -3,14 +3,15 @@ mod index;
 mod db;
 mod entities;
 mod game;
-use chrono::{Local, Duration};
+// use chrono::{Local, Duration};
 use migration::{Migrator, MigratorTrait};
-use sea_orm::Database;
+use sea_orm::{Database, DatabaseConnection};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
 use std::thread::{self, sleep};
+use std::time::Duration;
 
 #[macro_use]
 extern crate rocket;
@@ -34,8 +35,9 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    let _child = thread::spawn(move || daily_interval());
-
+    let db_clone: DatabaseConnection = db_conn.clone();
+    thread::spawn(move || daily_interval(&db_clone));
+  
     rocket::build()
         .manage(db_conn)
         .attach(Cors)
@@ -49,19 +51,21 @@ async fn rocket() -> _ {
             game::game_try,
             game::update_db,
         ])
+
 }
 
-fn daily_interval(){
+fn daily_interval(db: &DatabaseConnection){
     loop {
-        let time_now = Local::now();
+        // let time_now = Local::now();
 
-        let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
+        // let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
 
-        let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
+        // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
-        sleep(duration);
-        println!("NEW TARGET GENERATED")
-        // new_day();
+        // sleep(duration);
+        sleep(Duration::from_millis(5000));
+        println!("NEW TARGET GENERATED");
+        db::new_day(db);
     }
 }
 

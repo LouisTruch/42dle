@@ -1,5 +1,7 @@
 use sea_orm::*;
 use crate::{entities::{prelude::*, *}, game::CampusStudent};
+use rand::Rng;
+
 
 pub async fn new_user(
     db: &DatabaseConnection,
@@ -72,16 +74,13 @@ pub async fn get_leaderboard(
         .await
 }
 
-
 pub async fn new_day(
     db: &DatabaseConnection,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
-    /*
-    let students = db::get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
+    let students = get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
     let mut rng = rand::thread_rng();
     let index = rng.gen_range(0..students.len());
-    */
     
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
@@ -96,9 +95,12 @@ pub async fn new_day(
     }
 
     // Create a new user to guess to add in game tables
+    println!("{:?}", students[index]);
     let new_day = game::ActiveModel {
-        // login_to_find: Set(new_login.to_owned()),
-        // profile_pic: Set(new_profile_pic.to_owned()),
+        login_to_find: Set(students[index].login.to_owned()),
+        profile_pic: Set(students[index].profile_pic.to_owned()),
+        first_name: Set(students[index].first_name.to_owned()),
+        last_name: Set(students[index].last_name.to_owned()),
         ..Default::default()
     };
 

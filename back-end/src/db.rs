@@ -1,9 +1,10 @@
-use rocket::{State, http::{CookieJar, Status}, serde::json::Json};
+use std::{fs::{File, self}, io::{copy, Cursor}};
+use rocket::{State, http::Status, serde::json::Json};
 use sea_orm::*;
 use rand::{Rng, rngs::StdRng, SeedableRng};
 use reqwest;
-use image;
 use crate::{entities::{prelude::*, *}, game::CampusStudent, auth::Token};
+use image;
 
 pub async fn new_user(
     db: &DatabaseConnection,
@@ -95,14 +96,42 @@ pub async fn get_leaderboard(
         .await
 }
 
-fn generate_images(stud: campus_users::Model){
-    let img_bytes = reqwest::blocking::get(stud.profile_pic)
-    .expect("generate_images: Get request to 42's api for profil pic issue")
-    .bytes()
-    .expect("generate_images: Failure to convert image's reponse to bytes.");
- 
-    let image = image::load_from_memory(&img_bytes)
-    .expect("generate_images: Fail to load image from memory");
+async fn generate_images(stud: campus_users::Model){
+    let img_bytes = reqwest::get(stud.profile_pic)
+        .await
+        .expect("generate_images: Get request to 42's api for profil pic issue");
+
+    fs::create_dir_all("./images")
+        .expect("generate_images: fail to create directory");
+
+
+    let mut file = File::create("./images/target_0.jpeg")
+        .expect("generate_images: fail to create file");
+
+    let mut content = Cursor::new(
+        img_bytes
+        .bytes()
+        .await.expect("generate_images: Convert image to bytes error.")
+    );
+    copy(&mut content, &mut file)
+    .expect("generate_images: fail to copy data into image");
+
+    for i in 0..7{
+        let mut path: String = String::from("./images/target_").to_owned();
+        path.push_str(i.to_string().as_str());
+        path.push_str(".jpeg");
+
+        let mut image = image::open("./images/target_0.jpeg").expect("generate_images: fail to open iamge");
+        image = if i > 4{ image.grayscale() } else { image };
+        image = if i == 4{ image.huerotate(180) } else { image };
+        image = if i == 3{ image.rotate180() } else { image };
+        image = if i > 1{ image.blur((i * 2) as f32) } else { image };
+
+        image
+            .save(path)
+            .expect("generate_images: fail to save image");
+        
+    }
 }
 
 pub async fn new_day(
@@ -113,7 +142,7 @@ pub async fn new_day(
     let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
 
-    generate_images(students[index].clone());
+    generate_images(students[index].clone()).await;
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 

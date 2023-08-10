@@ -182,14 +182,14 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     }
 }
 
-// #[get("/info")]
-// pub fn get_info(jar: &CookieJar<'_>, token: Option<Token>, db: &State<DatabaseConnection> ) {
-//     match token {
-//         Some(_) => {
-//             let coke = jar.get_private("user_id").unwrap().clone();
-//         }
-//         None => {
-//             println!("You can't logout");
-//         }
-//     }
-// }
+#[get("/info")]
+pub fn get_info(jar: &CookieJar<'_>, token: Option<Token>, db: &State<DatabaseConnection> ) {
+    match token {
+        Some(_) => {
+            let coke = jar.get_private("user_id").unwrap().clone();
+        }
+        None => {
+            println!("You can't logout");
+        }
+    }
+}

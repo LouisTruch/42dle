@@ -3,15 +3,15 @@ mod index;
 mod db;
 mod entities;
 mod game;
-use chrono::{Local, Duration};
-use migration::{Migrator, MigratorTrait, SeaRc};
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
 use dotenv::dotenv;
-use std::thread::{self, sleep};
-// use std::time::Duration;
+use std::thread::sleep;
+// use chrono::{Local, Duration};
+use std::time::Duration;
 use tokio::sync::Mutex;
 use std::sync::Arc;
 
@@ -61,14 +61,14 @@ async fn rocket() -> _ {
 async fn daily_interval(db: DatabaseConnection) {
     let portect = Arc::new(Mutex::new(0));
     loop {
-        let time_now = Local::now();
+        // let time_now = Local::now();
 
-        let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
+        // let next_midnight = (time_now + Duration::days(1)).date().and_hms(0, 0, 0);
 
-        let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
+        // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
-        sleep(duration);
-        // sleep(Duration::from_millis(5000));
+        // sleep(duration);
+        sleep(Duration::from_millis(10000));
         println!("NEW TARGET GENERATED");
         {
             let mut mutex = portect.lock().await;

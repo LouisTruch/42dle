@@ -1,7 +1,8 @@
-use rocket::{State, http::{CookieJar, Status}, serde::json::Json};
+use rocket::{State, http::Status, serde::json::Json};
 use sea_orm::*;
 use rand::{Rng, rngs::StdRng, SeedableRng};
 use reqwest;
+use std::fs;
 use image;
 use crate::{entities::{prelude::*, *}, game::CampusStudent, auth::Token};
 
@@ -51,7 +52,7 @@ pub async fn update_try_by_login(
 
         // add score for the win !
         let nb_score: i32 = users.score.unwrap().into();
-        let mut score_to_add: usize = 11 - new_vec.len();
+        let mut score_to_add: usize = 11 - new_vec.len() * 2;
         if score_to_add == 0 {
             score_to_add = 1;
         }
@@ -84,6 +85,26 @@ pub async fn get_all_users(
             Err(Status {code: 401})
         }
     }
+}
+
+pub async fn get_user_image(
+    db: &DatabaseConnection,
+    login: String
+) -> Result<Vec<u8>, DbErr> {
+    let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
+    let user: users::ActiveModel = user.unwrap().into();
+    let vec: Vec<String> = user.r#try.unwrap().into();
+    let mut path_to_image: String = String::from("./images/target_").to_owned();
+    if vec.len() < 7 {
+        path_to_image.push_str(&vec.len().to_string());
+    }
+    else {
+        path_to_image.push_str("6");
+    }
+    path_to_image.push_str(".jpeg");
+    println!("path: {path_to_image}");
+    let image_data = fs::read(path_to_image).unwrap();
+    Ok(image_data)
 }
 
 pub async fn get_leaderboard(

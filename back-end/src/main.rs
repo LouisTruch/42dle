@@ -55,6 +55,7 @@ async fn rocket() -> _ {
             game::game_try,
             game::update_db,
             game::new_target,
+            game::get_guess_image,
             db::get_all_users,
         ])
 

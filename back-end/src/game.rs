@@ -1,5 +1,5 @@
 use rocket::State;
-use rocket::http::CookieJar;
+use rocket::http::{CookieJar, Status};
 use std::time::Duration;
 use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
@@ -160,6 +160,27 @@ pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
         }
         None => {
             println!("You are not log in.");
+        }
+    }
+}
+
+#[get("/guess-image")]
+pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>
+) -> Result<Vec<u8>, Status> {
+    match token {
+        Some(_login) => {
+            let coke = jar.get_private("user_id").unwrap().clone();
+            match db::get_user_image(&db, coke.value().to_string()).await {
+                Ok(res) => Ok(res),
+                Err(_) => {
+                    println!("get_guess_image: failed to load image");
+                    Err(Status { code: 404 })
+                }
+            }
+        }
+        None => {
+            println!("get_guess_image: You are not log in.");
+            Err(Status { code: 401 })
         }
     }
 }

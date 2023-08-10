@@ -119,16 +119,25 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
 }
 
 #[post("/", data = "<data>")]
-pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token: Option<Token>) {
+pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token: Option<Token>
+) -> Result<Json<users::Model>, Status> {
     match token {
         Some(cookie) => {
-            let _ = db::update_try_by_login(
-                &db, "nlocusso".to_string(), 
-                data.login_to_guess.clone()
-            ).await;
+            match db::update_try_by_login(&db, cookie.user_id, data.login_to_guess.clone()).await {
+                Ok(res) => {
+                    if res.win == true {
+                        Ok(Json(res))
+                    }
+                    else {
+                        Err(Status { code: 404 })
+                    }
+                },
+                Err(_) => Err(Status { code: 404 })
+            }
         }
         None => {
             println!("You are not logged in");
+            Err(Status { code: 401 })
         }
     }
 }

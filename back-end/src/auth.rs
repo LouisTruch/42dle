@@ -185,12 +185,11 @@ pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
 }
 
 #[get("/info")]
-pub async fn get_info(jar: &CookieJar<'_>, token: Option<Token>, db: &State<DatabaseConnection>
+pub async fn get_info(token: Option<Token>, db: &State<DatabaseConnection>
 ) -> Result<Json<users::Model>, Status> {
     match token {
-        Some(_) => {
-            let coke = jar.get_private("user_id").unwrap().clone();
-            match db::get_user(db, coke.value().to_string()).await {
+        Some(cookie) => {
+            match db::get_user(db, cookie.user_id).await {
                 Ok(res) => Ok(Json(res)),
                 Err(_) => Err(Status {code: 404})
             }

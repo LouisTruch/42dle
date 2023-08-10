@@ -163,12 +163,10 @@ pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
 }
 
 #[get("/guess-image")]
-pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>
-) -> Result<Vec<u8>, Status> {
+pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection>) -> Result<Vec<u8>, Status> {
     match token {
-        Some(_login) => {
-            let coke = jar.get_private("user_id").unwrap().clone();
-            match db::get_user_image(&db, coke.value().to_string()).await {
+        Some(cookie) => {
+            match db::get_user_image(&db, cookie.user_id).await {
                 Ok(res) => Ok(res),
                 Err(_) => {
                     println!("get_guess_image: failed to load image");

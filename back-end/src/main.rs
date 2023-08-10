@@ -34,7 +34,7 @@ async fn rocket() -> _ {
         Err(e) => println!("Migration failed: {}", e)
     };
 
-    let child = thread::spawn(move || daily_interval());
+    let _child = thread::spawn(move || daily_interval());
 
     rocket::build()
         .manage(db_conn)

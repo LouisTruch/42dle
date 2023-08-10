@@ -3,9 +3,9 @@ use rocket::http::CookieJar;
 use std::time::Duration;
 use rocket::tokio::time::sleep;
 use sea_orm::DatabaseConnection;
-use serde::{Deserialize};
+use serde::Deserialize;
 use rocket::form::Form;
-use crate::db::{self, get_campus_users};
+use crate::db;
 use crate::auth::Token;
 
 
@@ -62,7 +62,6 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     for i in 1..=nb_pages{
         let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
-        println!("{}", url);
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()
@@ -123,7 +122,10 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, jar: &
     match token {
         Some(_) => {
             let coke = jar.get_private("user_id").unwrap().clone();
-            db::update_try_by_login(&db, coke.value().to_string(), data.login_to_guess.clone()).await;
+            let _ = db::update_try_by_login(
+                &db, coke.value().to_string(), 
+                data.login_to_guess.clone()
+            ).await;
         }
         None => {
             println!("You are not logged in");

@@ -5,24 +5,14 @@ pub async fn new_user(
     db: &DatabaseConnection,
     login: &String, 
     profile_pic: &String,
-    // token_api: &String
     ) -> Result<InsertResult<users::ActiveModel>, DbErr> {  
 
-    // match Users::find_by_id(login).one(db).await {
-    //     Ok(user) => return user,
-    //     Err(_) => {} 
-    // }
-
-    // Check if the new user is an admin
-    // let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
-    // let admin_name: Vec<&str> = admin_list.split(";").collect();
-    // let api42token = if admin_name.contains(&&login.as_str()){
-    //     _tokenApi
-    // } else {
-    //     String::new()
-    // };
-    // println!("api token: {}", api42token);
-
+    // Check if users is already in db
+    let existing_user = Users::find_by_id(login).one(db).await?;
+    if existing_user.is_some() {
+        return Err(DbErr::RecordNotInserted);
+    }
+    
     // Create a record to add in users table
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
@@ -131,6 +121,7 @@ pub async fn update_campus_user(
     db: &DatabaseConnection,
     campus_users: Vec<CampusStudent>
 ) {
+    let mut new_user: i32 = 0;
     for i in 0..campus_users.len() {
         let record = campus_users::ActiveModel {
             login: Set(campus_users[i].login.to_owned()),
@@ -145,8 +136,11 @@ pub async fn update_campus_user(
             ..Default::default()
         }; 
         match CampusUsers::insert(record).exec(db).await {
-            Ok(_) => println!("User add!"),
-            Err(e) => println!("error {}", e)
+            Ok(_) => { println!("Update Campus User --> User add!"); new_user = new_user + 1;},
+            Err(_) => println!("Update Campus User --> User already in db")
         };
+    }
+    if new_user > 0 {
+        println!("{} New Users !", new_user);
     }
 }

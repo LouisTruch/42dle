@@ -200,6 +200,24 @@ pub async fn get_campus_users(
         .await
 }
 
+pub async fn get_one_campus_users(
+    db: &DatabaseConnection,
+    login: String,
+) ->  Result<campus_users::Model, DbErr> {
+    
+    match CampusUsers::find_by_id(login)
+        .one(db)
+        .await {
+            Ok(res) => {
+                match res {
+                    Some(model) => Ok(model),
+                    None => Err(DbErr::RecordNotFound("get_one_campus_users: User not found!".to_string()))
+                }
+            },
+            Err(_) => Err(DbErr::RecordNotFound("get_one_campus_users: User not found!".to_string()))
+        }
+}
+
 pub async fn update_campus_user(
     db: &DatabaseConnection,
     campus_users: Vec<CampusStudent>

@@ -5,7 +5,7 @@
 	import type { ModalSettings, AutocompleteOption, PopupSettings } from '@skeletonlabs/skeleton';
 
 	export let data: PageData;
-	const users = data.users;
+	const leaderboardUsers = data.leaderboardUsers;
 	const everyUser = data.everyUser;
 	export let form: ActionData;
 
@@ -82,14 +82,8 @@
 			</tr>
 		</thead>
 		<tbody class="">
-			{#each users as user}
-				<tr
-					on:click={() => {
-						modal.title = user.login;
-						modal.image = user.profilePic;
-						modalStore.trigger(modal);
-					}}
-				>
+			{#each leaderboardUsers.splice(0,4) as user}
+				<tr>
 					<td class="text-primary-400">{user.login}</td>
 					<td class="text-secondary-400">{user.score}</td>
 				</tr>

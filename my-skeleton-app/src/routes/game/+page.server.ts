@@ -8,9 +8,10 @@ export const actions: Actions = {
 		if (!login) {
 			return fail(422, { login, missing: true });
 		}
+		const body = JSON.stringify({ login_to_guess: login });
 		const res = await fetch('/api/game', {
 			method: 'POST',
-			body: login,
+			body: body,
 			headers: {
 				'x-sveltekit-action': 'true',
 			},

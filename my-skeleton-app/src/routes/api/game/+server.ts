@@ -14,8 +14,9 @@ export async function POST(requestEvent: RequestEvent) {
 		}
 	}
 
+	const login = await request.json();
 	const formData = new FormData();
-	formData.append('login_to_guess', 'me');
+	formData.append('login_to_guess', login.login_to_guess);
 	const res = await fetch(env.api + '/game/', {
 		method: 'POST',
 		body: formData,

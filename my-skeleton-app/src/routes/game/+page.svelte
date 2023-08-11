@@ -47,6 +47,7 @@
 		<label class="label">
 			<!-- <input class="input" name="login" type="text" value={form?.login ?? ''} /> -->
 			<input
+				required
 				autocomplete="off"
 				class="input autocomplete"
 				name="login"

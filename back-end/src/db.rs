@@ -52,7 +52,7 @@ pub async fn update_try_by_login(
 
         // add score for the win !
         let nb_score: i32 = users.score.unwrap().into();
-        let mut score_to_add: usize = 11 - new_vec.len() * 2;
+        let mut score_to_add: usize = 12 - new_vec.len() * 2;
         if score_to_add == 0 {
             score_to_add = 1;
         }

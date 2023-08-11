@@ -11,7 +11,7 @@ export const load = async (loadEvent: PageLoadEvent) => {
 
 	const lbRes = await fetch('api/leaderboard');
 	const json = await lbRes.json();
-	console.log(json);
+	// console.log(json);
 	//Need to create leaderboard there
 
 	//Change this to our rust API leaderboard

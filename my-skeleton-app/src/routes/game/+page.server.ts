@@ -11,7 +11,7 @@ export const actions: Actions = {
 		const resUser = await fetch('api/users');
 		const everyUser = await resUser.json();
 		if (!everyUser.some((user: user) => user.login == login)) {
-			return fail(422, { login, notexist: true });
+			return fail(422, { login, loginNotFound: true });
 		}
 
 		const body = JSON.stringify({ login_to_guess: login });
@@ -22,7 +22,10 @@ export const actions: Actions = {
 				'x-sveltekit-action': 'true',
 			},
 		});
-		
+		if (!resApi.ok) {
+			return fail(422, { login, wrong: true });
+		}
+		return { success: true };
 	},
 };
 
@@ -32,7 +35,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 };
 
-interface user {
+export interface user {
 	login: string;
 	first_name: string;
 	last_name: string;

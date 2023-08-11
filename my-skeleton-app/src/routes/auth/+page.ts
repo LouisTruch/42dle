@@ -5,5 +5,4 @@ export const load = async ({ fetch, url }) => {
 
 	const res = await fetch(`/api/auth?code=${codeAfterRedirect}`);
 	throw redirect(302, '/profile');
-	// I dont understand throwing I guess
 };

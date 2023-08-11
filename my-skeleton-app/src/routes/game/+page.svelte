@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
-	import { Autocomplete, popup } from '@skeletonlabs/skeleton';
-	import type { AutocompleteOption, PopupSettings } from '@skeletonlabs/skeleton';
+	import { Autocomplete, popup, toastStore } from '@skeletonlabs/skeleton';
+	import type { AutocompleteOption, PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
+	import type { user } from './+page.server';
 
 	export let data: PageData;
 	const leaderboardUsers = data.leaderboardUsers;
@@ -13,6 +14,14 @@
 		event: 'focus-click',
 		target: 'popupAutocomplete',
 		placement: 'bottom',
+	};
+
+	let toastSetting: ToastSettings = {
+		message: '',
+		// background: 'variant-filled-error',
+		background: 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white',
+		// Add your custom classes here:
+		classes: 'border-4 border-purple-500',
 	};
 
 	let input: string = '';
@@ -33,26 +42,39 @@
 	}
 
 	let imgSrc = 'http://localhost:8000/game/guess-image?';
-	$: cacheImgSrc = imgSrc;
+	// Cache breaker to force the browser to make the request on imgSrc again
+	let count = 0;
+	$: cacheImgSrc = imgSrc + count;
+
 	function handleClick() {
-		// Cache breaker to force the browser to make the request on imgSrc again
-		$: cacheImgSrc = imgSrc + new Date().getTime();
+		setTimeout(() => {
+			count++;
+
+			if (!everyUser.some((user: user) => user.login == input)) {
+				toastSetting.message = 'Not a valid login';
+				toastStore.trigger(toastSetting);
+			} else if (!form?.success) {
+				toastSetting.message = 'WRONG';
+				toastStore.trigger(toastSetting);
+			}
+		}, 200);
 	}
 </script>
 
+<head><script src="https://kit.fontawesome.com/ad4e238733.js" crossorigin="anonymous"></script></head>
 <div class="flex">
 	<div class="bg-secondary-800 w-100 block justify-center mx-auto items-center p-2">
-		<div class="h2 uppercase bg-secondary-900 font-bold"><p>Guess the student :</p></div>
+		<div class="h2 uppercase bg-secondary-900 font-bold"><p>Guess the student</p></div>
 		<img src={cacheImgSrc} alt="a 42 student to guess" />
 		<form method="POST" action="?/guess" use:enhance>
 			<div class="flex">
 				<input
 					required
 					autocomplete="off"
-					class="select rounded-none rounded-l-lg"
+					class="select rounded-none rounded-bl-lg"
 					name="login"
 					type="text"
-					placeholder="login..."
+					placeholder="Login..."
 					bind:value={input}
 					use:popup={popupSetting}
 				/>
@@ -63,10 +85,12 @@
 				</div>
 				<button
 					on:click={handleClick}
-					class="btn bg-gradient-to-br variant-gradient-secondary-primary rounded-none rounded-r-lg">?</button
+					class="btn bg-gradient-to-br variant-gradient-secondary-primary rounded-none rounded-br-lg"
+					><i class="fa-solid fa-arrow-right" /></button
 				>
 			</div>
-			{#if form?.notexist}<p class="input-warning">Please enter a valid login :)</p>{/if}
+			{#if form?.loginNotFound}<p class="card">Enter a valid login :)</p>{/if}
+			{#if form?.wrong}<p class="input-error">WRONG GROS FDP</p>{/if}
 		</form>
 	</div>
 

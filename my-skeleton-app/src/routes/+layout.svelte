@@ -9,13 +9,13 @@
 	import Header from '$lib/header/header.svelte';
 	import Footer from '$lib/footer/footer.svelte';
 
-	import { AppShell, Modal, modalStore } from '@skeletonlabs/skeleton';
+	import { AppShell, Toast, toastStore } from '@skeletonlabs/skeleton';
 	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
-<Modal />
+<Toast position="b" />
 
 <AppShell>
 	<svelte:fragment slot="pageHeader">
@@ -28,3 +28,9 @@
 		<Footer />
 	</svelte:fragment>
 </AppShell>
+
+<style>
+	body {
+		@apply bg-surface-50-900-token;
+	}
+</style>

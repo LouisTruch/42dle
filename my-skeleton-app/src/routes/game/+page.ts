@@ -1,8 +1,4 @@
-import type { PageLoadEvent } from './$types';
-
-export const load = async (loadEvent: PageLoadEvent) => {
-	const { fetch } = loadEvent;
-
+export const load = async ({ fetch }) => {
 	const res = await fetch('api/users');
 	const everyUser = await res.json();
 

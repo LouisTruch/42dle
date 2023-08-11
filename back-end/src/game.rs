@@ -214,20 +214,3 @@ pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection
         }
     }
 }
-
-#[get("/campus-user/<login>")]
-pub async fn get_user_campus(login: String, token: Option<Token>, db: &State<DatabaseConnection>
-) -> Result<Json<campus_users::Model>, Status> {
-    match token {
-        Some(_login) => {
-            match db::get_one_campus_users(db, login).await {
-                Ok(res) => Ok(Json(res)),
-                Err(_) => Err(Status { code: 404 })
-            }
-        }
-        None => {
-            println!("get_leaderboard: You are not log in.");
-            Err(Status { code: 401 })
-        }
-    }
-}

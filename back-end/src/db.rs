@@ -95,11 +95,11 @@ pub async fn get_user_image(
     let user: users::ActiveModel = user.unwrap().into();
     let vec: Vec<String> = user.r#try.unwrap().into();
     let mut path_to_image: String = String::from("./images/target_").to_owned();
-    if vec.len() < 7 {
-        path_to_image.push_str(&(6 - vec.len()).to_string());
+    if vec.len() > 6 || user.win.unwrap().into() {
+        path_to_image.push_str("0");
     }
     else {
-        path_to_image.push_str("0");
+        path_to_image.push_str(&(6 - vec.len()).to_string());
     }
     path_to_image.push_str(".jpeg");
     println!("path: {path_to_image}");
@@ -198,24 +198,6 @@ pub async fn get_campus_users(
     CampusUsers::find()
         .all(db)
         .await
-}
-
-pub async fn get_one_campus_users(
-    db: &DatabaseConnection,
-    login: String,
-) ->  Result<campus_users::Model, DbErr> {
-    
-    match CampusUsers::find_by_id(login)
-        .one(db)
-        .await {
-            Ok(res) => {
-                match res {
-                    Some(model) => Ok(model),
-                    None => Err(DbErr::RecordNotFound("get_one_campus_users: User not found!".to_string()))
-                }
-            },
-            Err(_) => Err(DbErr::RecordNotFound("get_one_campus_users: User not found!".to_string()))
-        }
 }
 
 pub async fn update_campus_user(

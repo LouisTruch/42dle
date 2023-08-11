@@ -3,7 +3,7 @@ use rocket::{State, http::Status, serde::json::Json};
 use sea_orm::*;
 use rand::{Rng, rngs::StdRng, SeedableRng};
 use reqwest;
-use crate::{entities::{prelude::*, *}, game::CampusStudent, auth::Token};
+use crate::{entities::{prelude::*, *}, extarnal_api::CampusStudent, auth::Token};
 use image;
 
 pub async fn new_user(
@@ -221,12 +221,12 @@ pub async fn update_campus_user(
             ..Default::default()
         }; 
         match CampusUsers::insert(record).exec(db).await {
-            Ok(_) => { println!("Update Campus User --> User add!"); new_user = new_user + 1;},
-            Err(_) => println!("Update Campus User --> User already in db")
+            Ok(_) => { new_user = new_user + 1;},
+            Err(_) => {}
         };
     }
     if new_user > 0 {
-        println!("{} New Users !", new_user);
+        println!("{} users created !", new_user);
     }
 }
 

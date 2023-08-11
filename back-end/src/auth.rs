@@ -9,6 +9,7 @@ use rocket::State;
 // use crate::game::{get_users_campus, CampusStudent};
 use crate::db;
 use crate::entities::users;
+use crate::extarnal_api::{get_user_data, generate_token};
 use rocket::request::*;
 
 #[derive(Deserialize)]
@@ -16,28 +17,9 @@ pub struct ApiToken {
     access_token: String,
 }
 
-#[derive(Deserialize)]
-pub struct ImageData {
-    pub versions: ImageVersions,
-}
-
-#[derive(Deserialize)]
-pub struct ImageVersions {
-    pub medium: String,
-}
-
-#[derive(Deserialize)]
-struct ApiData {
-    login: String,
-    image: ImageData,
-}
-
 #[derive(Deserialize, Serialize)]
 pub struct Token{pub user_id: String}
 
-/*
-    CODE BELOW
-*/
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for Token {
@@ -60,57 +42,6 @@ impl<'r> FromRequest<'r> for Token {
             }
         }
     }
-}
-
-async fn generate_token(code: &str, ) -> String{
-    // Get informations in .env file to generate request's body for 42's api
-    let client_id: String =  env::var("CLIENT_ID").expect("CLIENT_ID not found in .env");
-    let client_secret: String =  env::var("CLIENT_SECRET").expect("CLIENT_SECRET not found in .env");
-    let data = [("grant_type", "authorization_code"),
-        ("client_id", &client_id),
-        ("client_secret", &client_secret),
-        ("code", &code), 
-        ("redirect_uri", "http://localhost:5173/auth"),
-    ];
-
-    // Send a request to 42's API with a request body.
-    // The API will return a response in JSON format.
-    // This JSON response will be parsed to extract access_token and return it as a String.
-    let client: reqwest::Client = reqwest::Client::new();
-    let access_token = client.post("https://api.intra.42.fr/oauth/token")
-        .header("Content-Type","application/x-www-form-urlencoded")
-        .form(&data)
-        .send()
-        .await
-        .expect("generate_token: Response from 42's api failed")
-        .json::<ApiToken>()
-        .await
-        .expect("generate_token: Parse the response from 42's api failed")
-        .access_token;
-    access_token
-}
-
-pub async fn get_user_data(token: String) -> (String, String) {
-    // Prepare the "Authorization" header by appending the token to "Bearer ".
-    let mut bearer: String = String::from("Bearer ").to_owned();
-    bearer.push_str(&token);
-
-    println!("{bearer}");
-    // Send a GET request to 42's api with the "Authorization" header.
-    // wait the response and parse it into the 'ApiData' struct.
-    let client = reqwest::Client::new();
-    let res = client.get("https://api.intra.42.fr/v2/me")
-        .header("Authorization", bearer.as_str())
-        .send()
-        .await
-        .expect("get_user_data: Response from 42's api failed")
-        .json::<ApiData>()
-        .await
-        .expect("get_user_data: Parse the response from 42's api failed");
-
-    // From this struct it will Extract login & image url.
-    // Return them as a tuple.
-    return (res.login, res.image.versions.medium);
 }
 
 fn generate_cookie(value: &String, cookie: &CookieJar<'_>, name: String) -> (){
@@ -150,12 +81,10 @@ fn generate_admin_cookie(token: &String, cookie: &CookieJar<'_>, login: &String)
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     match token {
         Some(cookie) => {
-            println!("ALREADY A COOKIE FOR: {}", cookie.user_id);
+            println!("already a cookie for {}", cookie.user_id);
             return ();
         }
-        None => {
-            println!("CREATE NEW COOKIE");
-        }
+        None => {}
     }
 
     let token = generate_token(code).await;

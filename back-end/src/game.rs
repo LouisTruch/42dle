@@ -1,13 +1,11 @@
-use reqwest::Response;
 use rocket::http::CookieJar;
-use rocket::{State, http::Status, serde::json::Json, tokio::time::sleep, form::Form};
-use std::time::Duration;
+use rocket::{State, http::Status, serde::json::Json, form::Form};
 use sea_orm::DatabaseConnection;
-use serde::Deserialize;
 
 use crate::db;
 use crate::auth::Token;
-use crate::entities::{users, campus_users};
+use crate::entities::users;
+use crate::extarnal_api::{CampusStudent, get_users_campus};
 
 
 #[derive(FromForm)]
@@ -15,114 +13,6 @@ pub struct NewTry {
     login_to_guess: String
 }
 
-#[derive(Deserialize)]
-pub struct ImageData {
-    pub versions: Option<ImageVersions>,
-}
-
-#[derive(Deserialize)]
-pub struct ImageVersions {
-    pub medium: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct CampusStudent {
-    pub login: String,
-    pub first_name: String,
-    pub last_name: String,
-    pub image: Option<ImageData>,
-    #[serde(rename = "alumni?")]  // Rename the field to match the JSON key
-    alumni: Option<bool>,
-    #[serde(rename = "active?")]  // Rename the field to match the JSON key
-    active: Option<bool>,
-}
-
-fn get_numbers_pages(campus_users: &Response) -> i32 {
-    let nb_users = campus_users.headers()
-    .get("X-Total")
-    .expect("get_users_campus token: get X-Total error");
-
-    (nb_users
-    .to_str()
-    .expect("get_users_campus: Can't convert the number of user from request into an int")
-    .parse::<f32>()
-    .unwrap() / 100.0).ceil() as i32
-
-}
-
-pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
-    let mut users: Vec<CampusStudent> = Vec::new();
-    let client: reqwest::Client = reqwest::Client::new();
-    let mut bearer: String = String::from("Bearer ").to_owned();
-    bearer.push_str(&token);
-
-    // iter on while users remain
-    let mut nb_pages= 2;
-    let mut i = 1;
-    while i <= nb_pages{
-        let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
-        url.push_str(&i.to_string());
-        let campus_users = client.get(url)
-            .header("Authorization", bearer.as_str())
-            .send()
-            .await
-            .expect("get_users_campus: Response from 42's api failed");
-        // on the first request, parse X-Total to get the number of pages
-        nb_pages = if i == 1 { get_numbers_pages(&campus_users) } else { nb_pages };
-        // parse reponse as json struct with user's data
-        let new_page = campus_users
-            .json::<Vec<CampusStudent>>()
-            .await
-            .expect("get_users_campus: Parse the response from 42's api failed");
-
-        users.extend(new_page);
-        sleep(Duration::from_millis(600)).await;
-        i += 1;
-    }
-
-    // remove inactive & alumni users
-    let mut i: usize = 0;
-    while i < users.len(){
-        let alumni = match users[i].alumni {
-            Some(val) => {val},
-            None => {true}
-        };
-        let active = match users[i].active {
-            Some(val) => {val},
-            None => {false}
-        };
-        match &users[i].image {
-            Some(img_data) => {
-                match &img_data.versions {
-                    Some(version) => {
-                        match &version.medium {
-                            Some(_img) => {},
-                            None => { 
-                                users.remove(i);
-                                continue;
-                            }
-                        }
-                    },
-                    None => { 
-                        users.remove(i);
-                        continue;
-                    }
-                }
-            },
-            None => { 
-                users.remove(i);
-                continue;
-            }
-        };
-
-        if alumni == true || active == false || users[i].last_name == "Angoule" || users[i].last_name == "Angouleme"{
-            users.remove(i);
-            continue;
-        }
-        i = i + 1;
-    }
-    users
-}
 
 #[post("/", data = "<data>")]
 pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token: Option<Token>

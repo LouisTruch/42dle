@@ -3,6 +3,7 @@ mod index;
 mod db;
 mod entities;
 mod game;
+mod extarnal_api;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use rocket::fairing::{Fairing, Info, Kind};

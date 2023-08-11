@@ -42,7 +42,6 @@ async function getAdminRights(event: any) {
 		credentials: 'include',
 		headers: { cookie: user_id },
 	});
-	console.log(res);
 	if (res.ok) {
 		return true;
 	}

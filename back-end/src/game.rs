@@ -1,3 +1,4 @@
+use reqwest::Response;
 use rocket::http::CookieJar;
 use rocket::{State, http::Status, serde::json::Json, tokio::time::sleep, form::Form};
 use std::time::Duration;
@@ -36,44 +37,50 @@ pub struct CampusStudent {
     active: Option<bool>,
 }
 
+fn get_numbers_pages(campus_users: &Response) -> i32 {
+    let nb_users = campus_users.headers()
+    .get("X-Total")
+    .expect("get_users_campus token: get X-Total error");
+
+    (nb_users
+    .to_str()
+    .expect("get_users_campus: Can't convert the number of user from request into an int")
+    .parse::<f32>()
+    .unwrap() / 100.0).ceil() as i32
+
+}
+
 pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     let mut users: Vec<CampusStudent> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
 
-    let reponse_campus_users = client.get("https://api.intra.42.fr/v2/campus/31/users?per_page=100")
-    .header("Authorization", bearer.as_str())
-    .send()
-    .await
-    .expect("get_users_campus: Response from 42's api failed");
-
-    let nb_users = reponse_campus_users.headers()
-    .get("X-Total")
-    .expect("get_users_campus token: get X-Total error");
-
-    let nb_pages: i32 = (nb_users
-    .to_str()
-    .expect("get_users_campus: Can't convert the number of user from request into an int")
-    .parse::<f32>()
-    .unwrap() / 100.0).ceil() as i32;
-
-    println!("{}", bearer);
-    for i in 1..=nb_pages{
+    // iter on while users remain
+    let mut nb_pages= 2;
+    let mut i = 1;
+    while i <= nb_pages{
         let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()
             .await
-            .expect("get_users_campus: Response from 42's api failed")
+            .expect("get_users_campus: Response from 42's api failed");
+        // on the first request, parse X-Total to get the number of pages
+        nb_pages = if i == 1 { get_numbers_pages(&campus_users) } else { nb_pages };
+        // parse reponse as json struct with user's data
+        let new_page = campus_users
             .json::<Vec<CampusStudent>>()
             .await
             .expect("get_users_campus: Parse the response from 42's api failed");
 
-        users.extend(campus_users);
+        users.extend(new_page);
         sleep(Duration::from_millis(600)).await;
+        i += 1;
     }
+
+    // remove inactive & alumni users
     let mut i: usize = 0;
     while i < users.len(){
         let alumni = match users[i].alumni {

@@ -11,9 +11,10 @@ export const GET = async ({ fetch, request }) => {
 		}
 	}
 
-	const res = await fetch(env.api + '/auth/logout', {
+	const res = await fetch(env.api + '/game/users', {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});
+
 	return res;
 };

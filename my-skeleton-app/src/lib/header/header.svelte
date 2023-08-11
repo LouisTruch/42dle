@@ -25,11 +25,10 @@
 					src={$page.data.user.profile_pic}
 				/></a
 			>
-			<h2 class="px-4 hover:!text-primary-600"><a href="/profile">Profile</a></h2>
 			<h2 class="hover:!text-primary-600"><a href="/game">Game</a></h2>
 			<button on:click={handleLogout}><h2 class=" px-4 hover:!text-primary-600">Logout</h2></button>
 			{#if $page.data.user.isAdmin}
-				<h2 class="px-4 hover:!text-primary-600"><a href="/admin">Admin</a></h2>
+				<h2 class="hover:!text-primary-600"><a href="/admin">Admin</a></h2>
 			{/if}
 		{/if}
 

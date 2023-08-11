@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import { env } from '../env';
 
 export async function POST(requestEvent: RequestEvent) {
 	const { request, fetch } = requestEvent;
@@ -15,7 +16,7 @@ export async function POST(requestEvent: RequestEvent) {
 
 	const formData = new FormData();
 	formData.append('login_to_guess', 'me');
-	const res = await fetch(`http://127.0.0.1:8000/game/`, {
+	const res = await fetch(env.api + '/game/', {
 		method: 'POST',
 		body: formData,
 		credentials: 'include',

@@ -1,3 +1,5 @@
+import { env } from '../env.js';
+
 export const GET = async ({ fetch, request }) => {
 	let cookies = request.headers.get('cookie');
 	if (cookies == null) {
@@ -9,7 +11,7 @@ export const GET = async ({ fetch, request }) => {
 		}
 	}
 
-	const res = await fetch('http://localhost:8000/auth/info', {
+	const res = await fetch(env.api + '/auth/info', {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});

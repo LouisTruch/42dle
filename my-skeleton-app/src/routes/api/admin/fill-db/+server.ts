@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import { env } from '../../env';
 
 export async function GET(requestEvent: RequestEvent) {
 	const { fetch, request } = requestEvent;
@@ -12,7 +13,7 @@ export async function GET(requestEvent: RequestEvent) {
 			cookies = '';
 		}
 	}
-	const response = await fetch('http://127.0.0.1:8000/game/update-db', {
+	const response = await fetch(env.api + '/game/update-db', {
 		method: 'GET',
 		credentials: 'include',
 		headers: { cookie: cookies },

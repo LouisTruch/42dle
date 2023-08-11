@@ -1,4 +1,5 @@
 import { error, type RequestEvent } from '@sveltejs/kit';
+import { env } from '../env';
 
 export async function GET(requestEvent: RequestEvent) {
 	const { request, url, fetch } = requestEvent;
@@ -17,7 +18,7 @@ export async function GET(requestEvent: RequestEvent) {
 			cookies = '';
 		}
 	}
-	const res = await fetch(`http://127.0.0.1:8000/auth/token/${code}`, {
+	const res = await fetch(env.api + `/auth/token/${code}`, {
 		method: 'GET',
 		credentials: 'include',
 		headers: { cookie: cookies },

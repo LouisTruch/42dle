@@ -19,7 +19,7 @@ export const actions: Actions = {
 	},
 };
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, fetch }) => {
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}

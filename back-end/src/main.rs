@@ -20,6 +20,9 @@ extern crate rocket;
 
 #[launch]
 async fn rocket() -> _ {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Warn)
+        .init();
     dotenv().ok();
     // Connect to the database and panic if fail
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
@@ -32,6 +35,7 @@ async fn rocket() -> _ {
     //     Ok(()) => println!("Migration down done"),
     //     Err(e) => println!("Migration down failed: {}", e)
     // };
+
     match Migrator::up(&db_conn, None).await {
         Ok(()) => println!("Migration done"),
         Err(e) => println!("Migration failed: {}", e)

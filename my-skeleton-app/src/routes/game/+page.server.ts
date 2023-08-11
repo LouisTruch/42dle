@@ -8,14 +8,21 @@ export const actions: Actions = {
 		if (!login) {
 			return fail(422, { login, missing: true });
 		}
+		const resUser = await fetch('api/users');
+		const everyUser = await resUser.json();
+		if (!everyUser.some((user: user) => user.login == login)) {
+			return fail(422, { login, notexist: true });
+		}
+
 		const body = JSON.stringify({ login_to_guess: login });
-		const res = await fetch('/api/game', {
+		const resApi = await fetch('/api/game', {
 			method: 'POST',
 			body: body,
 			headers: {
 				'x-sveltekit-action': 'true',
 			},
 		});
+		
 	},
 };
 
@@ -24,3 +31,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/login');
 	}
 };
+
+interface user {
+	login: string;
+	first_name: string;
+	last_name: string;
+	profile_pic: string;
+}

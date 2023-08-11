@@ -52,8 +52,8 @@ pub async fn update_try_by_login(
 
         // add score for the win !
         let nb_score: i32 = users.score.unwrap().into();
-        let mut score_to_add: usize = 12 - new_vec.len() * 2;
-        if score_to_add == 0 {
+        let mut score_to_add: i32 = 12 - (new_vec.len() as i32) * 2;
+        if score_to_add <= 0 {
             score_to_add = 1;
         }
         users.score = Set(nb_score + score_to_add as i32);
@@ -102,7 +102,6 @@ pub async fn get_user_image(
         path_to_image.push_str(&(6 - vec.len()).to_string());
     }
     path_to_image.push_str(".jpeg");
-    println!("path: {path_to_image}");
     let image_data = fs::read(path_to_image).unwrap();
     Ok(image_data)
 }

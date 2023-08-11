@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
-	import { modalStore, Autocomplete, popup } from '@skeletonlabs/skeleton';
-	import type { ModalSettings, AutocompleteOption, PopupSettings } from '@skeletonlabs/skeleton';
+	import { Autocomplete, popup } from '@skeletonlabs/skeleton';
+	import type { AutocompleteOption, PopupSettings } from '@skeletonlabs/skeleton';
 
 	export let data: PageData;
 	const leaderboardUsers = data.leaderboardUsers;
@@ -32,13 +32,6 @@
 		input = event.detail.label;
 	}
 
-	export let modal: ModalSettings = {
-		type: 'alert',
-		title: '',
-		body: '',
-		buttonTextCancel: 'Close',
-	};
-
 	let imgSrc = 'http://localhost:8000/game/guess-image?';
 	$: cacheImgSrc = imgSrc;
 	function handleClick() {
@@ -56,10 +49,10 @@
 				<input
 					required
 					autocomplete="off"
-					class="select"
+					class="select rounded-none rounded-l-lg"
 					name="login"
 					type="text"
-					placeholder="stud..."
+					placeholder="login..."
 					bind:value={input}
 					use:popup={popupSetting}
 				/>
@@ -68,11 +61,12 @@
 						<Autocomplete bind:input options={loginOptions} on:selection={onLoginSelection} />
 					{/if}
 				</div>
-				<!-- {#if form?.missing}<p class="input-error">Missing field</p>{/if} -->
-				<button on:click={handleClick} class="btn bg-gradient-to-br variant-gradient-secondary-primary rounded-xl"
-					>?</button
+				<button
+					on:click={handleClick}
+					class="btn bg-gradient-to-br variant-gradient-secondary-primary rounded-none rounded-r-lg">?</button
 				>
 			</div>
+			{#if form?.notexist}<p class="input-warning">Please enter a valid login :)</p>{/if}
 		</form>
 	</div>
 

@@ -76,7 +76,7 @@ async fn daily_interval(db: DatabaseConnection) {
         // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         // sleep(duration);
-        sleep(Duration::from_millis(20000)).await;
+        sleep(Duration::from_millis(60000)).await;
         println!("NEW TARGET GENERATED");
         {
             match db::new_day(&db).await {

@@ -15,16 +15,15 @@
 	<svelte:fragment slot="lead"
 		><strong class="text-xl uppercase hover:!text-primary-500"><a href="/">42dle</a></strong>
 		{#if $page.data.user}
-			<a href="/profile" class="px-3"
-				><Avatar
-					border="border-2 border-surface-300-500-token hover:!border-primary-500"
-					cursor="cursor-pointer"
+			<div class="px-2">
+				<Avatar
+					border="border-2 border-surface-300-500-token"
 					initials="42"
 					width="w-12"
 					rounded="rounded-full"
 					src={$page.data.user.profile_pic}
-				/></a
-			>
+				/>
+			</div>
 			<h2 class="hover:!text-primary-600"><a href="/game">Game</a></h2>
 			<button on:click={handleLogout}><h2 class=" px-4 hover:!text-primary-500">Logout</h2></button>
 			{#if $page.data.user.isAdmin}
@@ -40,6 +39,6 @@
 	<svelte:fragment slot="default" />
 
 	<svelte:fragment slot="trail">
-		<strong class="text-l p-2 hover:!text-primary-500"><a href="/about">About us</a></strong></svelte:fragment
+		<strong class="text-l p-2 hover:!text-primary-500"><a href="/about">About</a></strong></svelte:fragment
 	>
 </AppBar>

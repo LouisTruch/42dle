@@ -1,7 +1,7 @@
 <br />
 <div class="container h-full mx-auto justify-center items-center">
 	<h1 class="text-l uppercase">About us</h1>
-	Made by<a class="anchor" href="https://profile.intra.42.fr/users/adamiens"> Adamiens</a>,
+	Made by <a class="anchor" href="https://profile.intra.42.fr/users/adamiens"> Adamiens</a>,
 	<a class="anchor" href="https://profile.intra.42.fr/users/nlocusso">Nlocusso</a> and
 	<a class="anchor" href="https://profile.intra.42.fr/users/ltruchel">Ltruchel</a>.
 	<br />

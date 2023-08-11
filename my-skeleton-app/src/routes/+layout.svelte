@@ -15,22 +15,18 @@
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
-<Toast position="b" />
+<body data-theme="skeleton">
+	<Toast position="b" />
 
-<AppShell>
-	<svelte:fragment slot="pageHeader">
-		<Header />
-	</svelte:fragment>
+	<AppShell>
+		<svelte:fragment slot="pageHeader">
+			<Header/>
+		</svelte:fragment>
 
-	<slot />
+		<slot />
 
-	<svelte:fragment slot="pageFooter">
-		<Footer />
-	</svelte:fragment>
-</AppShell>
-
-<style>
-	body {
-		@apply bg-surface-50-900-token;
-	}
-</style>
+		<svelte:fragment slot="pageFooter">
+			<Footer />
+		</svelte:fragment>
+	</AppShell>
+</body>

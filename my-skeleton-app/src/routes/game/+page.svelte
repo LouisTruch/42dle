@@ -18,10 +18,8 @@
 
 	let toastSetting: ToastSettings = {
 		message: '',
-		// background: 'variant-filled-error',
-		background: 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white',
+		background: 'variant-filled-error',
 		// Add your custom classes here:
-		classes: 'border-4 border-purple-500',
 	};
 
 	let input: string = '';
@@ -52,9 +50,15 @@
 
 			if (!everyUser.some((user: user) => user.login == input)) {
 				toastSetting.message = 'Not a valid login';
+				toastSetting.background = 'variant-filled-error';
 				toastStore.trigger(toastSetting);
 			} else if (!form?.success) {
 				toastSetting.message = 'WRONG';
+				toastSetting.background = 'variant-filled-error';
+				toastStore.trigger(toastSetting);
+			} else if (form?.success) {
+				toastSetting.message = 'GOOD JOB :)';
+				toastSetting.background = 'variant-filled-success';
 				toastStore.trigger(toastSetting);
 			}
 		}, 200);
@@ -63,8 +67,8 @@
 
 <head><script src="https://kit.fontawesome.com/ad4e238733.js" crossorigin="anonymous"></script></head>
 <div class="flex">
-	<div class="bg-secondary-800 w-100 block justify-center mx-auto items-center p-2">
-		<div class="h2 uppercase bg-secondary-900 font-bold"><p>Guess the student</p></div>
+	<div class="w-100 block justify-center mx-auto items-center">
+		<div class="h2 uppercase bg-secondary-900 font-bold"><p>Guess the login</p></div>
 		<img src={cacheImgSrc} alt="a 42 student to guess" />
 		<form method="POST" action="?/guess" use:enhance>
 			<div class="flex">
@@ -89,13 +93,13 @@
 					><i class="fa-solid fa-arrow-right" /></button
 				>
 			</div>
-			{#if form?.loginNotFound}<p class="card">Enter a valid login :)</p>{/if}
-			{#if form?.wrong}<p class="input-error">WRONG GROS FDP</p>{/if}
+			<!-- {#if form?.loginNotFound}<p class="card">Enter a valid login :)</p>{/if} -->
+			<!-- {#if form?.wrong}<p class="input-error">WRONG</p>{/if} -->
 		</form>
 	</div>
 
 	<div class="w-60 block mx-auto table-container">
-		<table class="table table-compact table-interactive">
+		<table class="table table-compact table-hover">
 			<thead>
 				<tr>
 					<th class="text-primary-500">Login</th>

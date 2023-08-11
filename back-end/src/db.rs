@@ -159,7 +159,10 @@ pub async fn new_day(
     db: &DatabaseConnection,
 ) -> Result<InsertResult<game::ActiveModel>, DbErr> {
 
-    let students = get_campus_users(&db).await.expect("new_target: Error in parsing of get_campus_users's return");
+    let students = get_campus_users(&db).await?;
+    if students == [] {
+        return Err(DbErr::RecordNotFound("new_day: No data in campus_users table!".to_string()))
+    }
     let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
 

@@ -6,6 +6,7 @@
 
 	export let data: PageData;
 	const users = data.users;
+	const everyUser = data.everyUser;
 	export let form: ActionData;
 
 	let popupSetting: PopupSettings = {
@@ -17,10 +18,15 @@
 	let input: string = '';
 	$: inputSize = input.length;
 
-	const loginOptions: AutocompleteOption[] = [
-		{ label: 'ltruchel', value: 'ltruchel' },
-		{ label: 'nlocusso', value: 'nlocusso' },
-	];
+	const loginOptions: AutocompleteOption[] = [];
+	for (let user of everyUser) {
+		const userInOptions = {
+			label: user.login,
+			value: user.login,
+			keywords: user.first_name + ', ' + user.last_name,
+		};
+		loginOptions.push(userInOptions);
+	}
 
 	function onLoginSelection(event: any) {
 		input = event.detail.label;
@@ -56,11 +62,11 @@
 				bind:value={input}
 				use:popup={popupSetting}
 			/>
-			{#if inputSize > 1}
-				<div data-popup="popupAutocomplete" class="card max-w-sm overflow-y-auto w-full" tabindex="-1">
+			<div data-popup="popupAutocomplete" class="card max-w-sm overflow-y-auto w-full" tabindex="-1">
+				{#if inputSize > 1}
 					<Autocomplete bind:input options={loginOptions} on:selection={onLoginSelection} />
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</label>
 		<!-- {#if form?.missing}<p class="input-error">Missing field</p>{/if} -->
 		<button on:click={handleClick} class="btn variant-filled">GUESS STUDENT</button>

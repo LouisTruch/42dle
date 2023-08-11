@@ -71,11 +71,11 @@ pub async fn update_try_by_login(
 pub async fn get_all_users(
     token: Option<Token>,
     db: &State<DatabaseConnection>,
-) -> Result<Json<Vec<users::Model>>, Status> {
+) -> Result<Json<Vec<campus_users::Model>>, Status> {
     match token {
         Some(_) => {
             let db: &DatabaseConnection = &db;
-            match Users::find().all(db).await {
+            match get_campus_users(db).await {
                 Ok(result) => Ok(Json(result)),
                 Err(_) => Err(Status { code: 404 })
             }

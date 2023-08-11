@@ -1,6 +1,5 @@
 use rocket::http::CookieJar;
 use rocket::{State, http::Status, serde::json::Json, tokio::time::sleep, form::Form};
-use std::env;
 use std::time::Duration;
 use sea_orm::DatabaseConnection;
 use serde::Deserialize;

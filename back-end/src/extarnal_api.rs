@@ -4,6 +4,8 @@ use serde::Deserialize;
 use rocket::tokio::time::sleep;
 use std::time::Duration;
 
+use crate::auth::Situation;
+
 #[derive(Deserialize)]
 pub struct ImageData {
     pub versions: Option<ImageVersions>,
@@ -15,9 +17,15 @@ pub struct ImageVersions {
 }
 
 #[derive(Deserialize)]
+pub struct CursusLevel {
+    pub level: f64,
+}
+
+#[derive(Deserialize)]
 struct ApiData {
     login: String,
     image: Option<ImageData>,
+    cursus_users: Vec<CursusLevel>,
 }
 
 #[derive(Deserialize)]
@@ -25,7 +33,7 @@ pub struct ApiToken {
     access_token: String,
 }
 
-pub async fn get_user_data(token: String) -> (String, String) {
+pub async fn get_user_data(token: String) -> (String, String, String) {
     // Prepare the "Authorization" header by appending the token to "Bearer ".
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
@@ -42,7 +50,10 @@ pub async fn get_user_data(token: String) -> (String, String) {
         .await
         .expect("get_user_data: Parse the response from 42's api failed");
 
-    // From this struct it will Extract login & image url.
+    // From this struct it will Extract login & image url & cursus.
+    let situation = if res.cursus_users.len() > 1 {
+        Situation::Stud.to_string()
+    } else { Situation::Pool.to_string() };
     // Return them as a tuple.
     return (res.login, res.image
         .expect("get_user_data: user without profil pic")
@@ -50,6 +61,7 @@ pub async fn get_user_data(token: String) -> (String, String) {
         .expect("get_user_data: user without profil pic")
         .medium
         .expect("get_user_data: user without profil pic")
+    , situation
     );
 }
 

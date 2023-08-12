@@ -91,7 +91,8 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     }
 
     let token = generate_token(code).await;
-    let (login, img, situation) = get_user_data(token.clone()).await;
+    let (login, img, mut situation) = get_user_data(token.clone()).await;
+    situation = Situation::Pool.to_string();
     generate_admin_cookie(&token, cookie, &login);
     generate_cookie(&login, cookie, String::from("user_data"), situation.clone());
     match student_db::new_user(&db, &login, &img, situation).await {

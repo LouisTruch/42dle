@@ -70,6 +70,7 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
+// demander a Armand pour le token
 #[get("/users")]
 pub async fn get_all_users(
     token: Option<Token>,

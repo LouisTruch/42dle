@@ -11,7 +11,7 @@ export const GET = async ({ fetch, request }) => {
 		}
 	}
 
-	const res = await fetch(env.api + '/game/pool-users', {
+	const res = await fetch(env.api + '/game/student-users', {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});

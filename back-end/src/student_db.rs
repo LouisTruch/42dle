@@ -35,9 +35,9 @@ pub async fn new_user(
         profile_pic: Set(profile_pic.to_owned()),
         student: Set(bool_situation),
         r#try: Set(vec![]),
+        pokedex: Set(vec![]),
         ..Default::default()
     };
-
     // Insert in users tables and return the Result
     Users::insert(record).exec(db).await
 }
@@ -54,7 +54,6 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
-    println!("{id}");
     let game: Option<game::Model> = Game::find_by_id(id).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.expect("update_try_by_login: no user to guess").into();
 
@@ -67,6 +66,11 @@ pub async fn update_try_by_login(
         if score_to_add <= 0 {
             score_to_add = 1;
         }
+        
+        let mut pokedex_vec: Vec<String> = users.pokedex.unwrap().into();
+        pokedex_vec.push(new_try.to_string());
+        users.pokedex = Set(pokedex_vec);
+
         users.score = Set(nb_score + score_to_add as i32);
         users.win = Set(true);
     }
@@ -162,37 +166,7 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
         user.r#try = Set(vec![]);
         user.update(db).await?;
     }
-    // match Game::find_by_id(1).one(db).await {
-    //     Ok(student_guess) => {
-    //         if student_guess != None {
-    //             let mut student_guess = student_guess.unwrap().into();
-    //             student_guess = game::ActiveModel {
-    //                 id: Set(1),
-    //                 login_to_find: Set(students[index].login.to_owned()),
-    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
-    //                 first_name: Set(students[index].first_name.to_owned()),
-    //                 last_name: Set(students[index].last_name.to_owned()),
-    //                 ..Default::default()
-    //             };
-    //             student_guess.clone().update(db).await?;
-    //             println!("{:?}", student_guess);
-    //             Ok(student_guess)
-    //         } else {
-    //             let add_student_guess = game::ActiveModel {
-    //                 id: Set(1),
-    //                 login_to_find: Set(students[index].login.to_owned()),
-    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
-    //                 first_name: Set(students[index].first_name.to_owned()),
-    //                 last_name: Set(students[index].last_name.to_owned()),
-    //                 ..Default::default()
-    //             };
-    //             Game::insert(add_student_guess.clone()).exec(db).await?;
-    //             println!("{:?}", add_student_guess);
-    //             Ok(add_student_guess)
-    //         }
-    //     },
-    //     Err(e) => Err(e)
-    // }
+
     let add_student_guess = game::ActiveModel {
         id: Set(1),
         login_to_find: Set(students[index].login.to_owned()),

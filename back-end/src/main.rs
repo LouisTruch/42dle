@@ -6,7 +6,7 @@ mod entities;
 mod game;
 mod extarnal_api;
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{Database, DatabaseConnection, ConnectionTrait, Statement};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response};
@@ -25,6 +25,7 @@ async fn rocket() -> _ {
     env_logger::Builder::new()
         .filter_level(log::LevelFilter::Warn)
         .init();
+    
     dotenv().ok();
     // Connect to the database and panic if fail
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
@@ -81,7 +82,7 @@ async fn daily_interval(db: DatabaseConnection) {
         // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         // sleep(duration);
-        sleep(Duration::from_millis(10000)).await;
+        sleep(Duration::from_millis(20000)).await;
         println!("NEW TARGET GENERATED");
         {
             if let Err(e) = student_db::new_day(&db).await {

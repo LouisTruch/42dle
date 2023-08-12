@@ -98,36 +98,26 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
         user.update(db).await?;
     }
 
-    match Game::find_by_id(2).one(db).await {
-        Ok(pool_guess) => {
-            if pool_guess != None {
-                let mut pool_guess = pool_guess.unwrap().into();
-                pool_guess = game::ActiveModel {
-                    id: Set(2),
-                    login_to_find: Set(students[index].login.to_owned()),
-                    profile_pic: Set(students[index].profile_pic.to_owned()),
-                    first_name: Set(students[index].first_name.to_owned()),
-                    last_name: Set(students[index].last_name.to_owned()),
-                    ..Default::default()
-                };
-                pool_guess.clone().update(db).await?;
-                println!("{:?}", pool_guess);
-                Ok(pool_guess)
-            } else {
-                let add_pool_guess = game::ActiveModel {
-                    id: Set(2),
-                    login_to_find: Set(students[index].login.to_owned()),
-                    profile_pic: Set(students[index].profile_pic.to_owned()),
-                    first_name: Set(students[index].first_name.to_owned()),
-                    last_name: Set(students[index].last_name.to_owned()),
-                    ..Default::default()
-                };
-                Game::insert(add_pool_guess.clone()).exec(db).await?;
-                println!("{:?}", add_pool_guess);
-                Ok(add_pool_guess)
-            }
+    let add_pool_guess = game::ActiveModel {
+        id: Set(2),
+        login_to_find: Set(students[index].login.to_owned()),
+        profile_pic: Set(students[index].profile_pic.to_owned()),
+        first_name: Set(students[index].first_name.to_owned()),
+        last_name: Set(students[index].last_name.to_owned()),
+        ..Default::default()
+    };
+    
+    match Game::find_by_id(2).one(db).await? {
+        Some(_) => {
+            add_pool_guess.clone().update(db).await?;
+            println!("{:?}", add_pool_guess);
+            Ok(add_pool_guess)
         },
-        Err(e) => Err(e)
+        None => {
+            Game::insert(add_pool_guess.clone()).exec(db).await?;
+            println!("{:?}", add_pool_guess);
+            Ok(add_pool_guess)
+        }
     }
 }
 
@@ -168,10 +158,3 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
         println!("{} users created !", new_user);
     }
 }
-
-// pub async fn get_pokedex(db: &DatabaseConnection, login: String) -> Result<Vec<pool_users::Model>, DbErr>{
-//     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
-//     let user: users::ActiveModel = user.unwrap().into();
-
-//     Ok(user.pokedex())
-// }

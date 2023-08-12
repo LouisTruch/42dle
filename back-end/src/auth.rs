@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
 // use crate::game::{get_users_campus, CampusStudent};
-use crate::db;
+use crate::student_db;
 use crate::entities::users;
 use crate::extarnal_api::{get_user_data, generate_token};
 use rocket::request::*;
@@ -91,7 +91,7 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     let (login, img) = get_user_data(token.clone()).await;
     generate_admin_cookie(&token, cookie, &login);
     generate_cookie(&login, cookie, String::from("user_id"));
-    match db::new_user(&db, &login, &img).await {
+    match student_db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
             println!("init_session: {_e}");
@@ -119,7 +119,7 @@ pub async fn get_info(token: Option<Token>, db: &State<DatabaseConnection>
 ) -> Result<Json<users::Model>, Status> {
     match token {
         Some(cookie) => {
-            match db::get_user(db, cookie.user_id).await {
+            match student_db::get_user(db, cookie.user_id).await {
                 Ok(res) => Ok(Json(res)),
                 Err(_) => Err(Status {code: 404})
             }

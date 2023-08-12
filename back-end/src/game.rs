@@ -2,7 +2,7 @@ use rocket::http::CookieJar;
 use rocket::{State, http::Status, serde::json::Json, form::Form};
 use sea_orm::DatabaseConnection;
 
-use crate::db;
+use crate::student_db;
 use crate::auth::Token;
 use crate::entities::users;
 use crate::extarnal_api::{CampusStudent, get_users_campus};
@@ -19,7 +19,7 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token:
 ) -> Result<Json<users::Model>, Status> {
     match token {
         Some(cookie) => {
-            match db::update_try_by_login(&db, cookie.user_id, data.login_to_guess.clone()).await {
+            match student_db::update_try_by_login(&db, cookie.user_id, data.login_to_guess.clone()).await {
                 Ok(res) => {
                     if res.win == true {
                         Ok(Json(res))
@@ -44,7 +44,7 @@ pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar
         Some(_cookie) => {
             let coke = jar.get_private("token").unwrap().clone();
             let users_campus: Vec<CampusStudent> = get_users_campus(coke.value().to_string()).await;
-            db::update_campus_user(&db, users_campus).await;
+            student_db::update_campus_user(&db, users_campus).await;
         }
         None => {
             println!("You are not log in.");
@@ -56,7 +56,7 @@ pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar
 pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
     match token {
         Some(_login) => {
-            match db::new_day(&db).await {
+            match student_db::new_day(&db).await {
                 Ok(_) => {},
                 Err(e) => {
                     println!("new_target: {e}");
@@ -73,7 +73,7 @@ pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
 pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection>) -> Result<Vec<u8>, Status> {
     match token {
         Some(cookie) => {
-            match db::get_user_image(&db, cookie.user_id).await {
+            match student_db::get_user_image(&db, cookie.user_id).await {
                 Ok(res) => Ok(res),
                 Err(_) => {
                     println!("get_guess_image: failed to load image");
@@ -93,7 +93,7 @@ pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection
 ) -> Result<Json<Vec<users::Model>>, Status> {
     match token {
         Some(_login) => {
-            match db::leaderboard(db).await {
+            match student_db::leaderboard(db).await {
                 Ok(res) => Ok(Json(res)),
                 Err(_) => Err(Status { code: 404 })
             }

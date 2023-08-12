@@ -29,7 +29,7 @@ pub async fn get_user_data(token: String) -> (String, String) {
     // Prepare the "Authorization" header by appending the token to "Bearer ".
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
-
+    println!("{bearer}");
     // Send a GET request to 42's api with the "Authorization" header.
     // wait the response and parse it into the 'ApiData' struct.
     let client = reqwest::Client::new();

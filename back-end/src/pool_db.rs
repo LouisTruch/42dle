@@ -184,3 +184,10 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
         println!("{} users created !", new_user);
     }
 }
+
+// pub async fn get_pokedex(db: &DatabaseConnection, login: String) -> Result<Vec<pool_users::Model>, DbErr>{
+//     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
+//     let user: users::ActiveModel = user.unwrap().into();
+
+//     Ok(user.pokedex())
+// }

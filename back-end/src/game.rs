@@ -137,7 +137,6 @@ pub async fn get_leaderboard(token: Option<Token>, db: &State<DatabaseConnection
     }
 }
 
-// demander a Armand pour le token
 #[get("/student-users")]
 pub async fn get_student_users(
     token: Option<Token>,
@@ -157,8 +156,6 @@ pub async fn get_student_users(
     }
 }
 
-
-// requete pour get tout les psicineux
 #[get("/pool-users")]
 pub async fn get_pool_users(
     token: Option<Token>,
@@ -177,3 +174,22 @@ pub async fn get_pool_users(
         }
     }
 }
+
+// #[get("/pokedex")]
+// pub async fn pokedex(
+//     token: Option<Token>,
+//     db: &State<DatabaseConnection>,
+// ) -> Result<Json<Vec<pool_users::Model>>, Status> {
+//     match token {
+//         Some(cookie) => {
+//             match pool_db::get_pokedex(db, cookie.user_data.split(";").next().unwrap().to_string()).await {
+//                 Ok(result) => Ok(Json(result)),
+//                 Err(_) => Err(Status { code: 404 }),
+//             }
+//         }
+//         None => {
+//             println!("You are not logged in");
+//             Err(Status { code: 401 })
+//         }
+//     }
+// }

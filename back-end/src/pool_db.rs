@@ -1,7 +1,7 @@
 use crate::{
     auth::Token,
     entities::{prelude::*, *},
-    extarnal_api::CampusUsers,
+    extarnal_api::CampusStudent,
 };
 use image;
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -13,30 +13,7 @@ use std::{
     io::{copy, Cursor},
 };
 
-// take bool to know if he his stud or not
-pub async fn new_user(
-    db: &DatabaseConnection,
-    login: &String,
-    profile_pic: &String,
-) -> Result<InsertResult<users::ActiveModel>, DbErr> {
-    // Check if users is already in db
-    let existing_user = Users::find_by_id(login).one(db).await?;
-    if existing_user.is_some() {
-        return Err(DbErr::RecordNotInserted);
-    }
-
-    // Create a record to add in users table
-    let record = users::ActiveModel {
-        login: Set(login.to_owned()),
-        profile_pic: Set(profile_pic.to_owned()),
-        r#try: Set(vec![]),
-        ..Default::default()
-    };
-
-    // Insert in users tables and return the Result
-    Users::insert(record).exec(db).await
-}
-
+//change id in game or take id in parameter
 pub async fn update_try_by_login(
     db: &DatabaseConnection,
     login: String,
@@ -70,27 +47,27 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
-// demander a Armand pour le token
-#[get("/users")]
-pub async fn get_all_users(
-    token: Option<Token>,
-    db: &State<DatabaseConnection>,
-) -> Result<Json<Vec<student_users::Model>>, Status> {
-    match token {
-        Some(_) => {
-            let db: &DatabaseConnection = &db;
-            match get_campus_users(db).await {
-                Ok(result) => Ok(Json(result)),
-                Err(_) => Err(Status { code: 404 }),
-            }
-        }
-        None => {
-            println!("You are not logged in");
-            Err(Status { code: 401 })
-        }
-    }
-}
+// #[get("/pool-users")]
+// pub async fn get_all_users(
+//     token: Option<Token>,
+//     db: &State<DatabaseConnection>,
+// ) -> Result<Json<Vec<pool_users::Model>>, Status> {
+//     match token {
+//         Some(_) => {
+//             let db: &DatabaseConnection = &db;
+//             match get_campus_users(db).await {
+//                 Ok(result) => Ok(Json(result)),
+//                 Err(_) => Err(Status { code: 404 }),
+//             }
+//         }
+//         None => {
+//             println!("You are not logged in");
+//             Err(Status { code: 401 })
+//         }
+//     }
+// }
 
+// change path name
 pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Vec<u8>, DbErr> {
     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
     let user: users::ActiveModel = user.unwrap().into();
@@ -108,13 +85,13 @@ pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Ve
 
 pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, DbErr> {
     Users::find()
-        .filter(users::Column::Student.eq(true))
+        .filter(users::Column::Student.eq(false))
         .order_by_desc(users::Column::Score)
         .all(db)
         .await
 }
 
-async fn generate_images(stud: student_users::Model) {
+async fn generate_images(stud: pool_users::Model) {
     let img_bytes = reqwest::get(stud.profile_pic)
         .await
         .expect("generate_images: Get request to 42's api for profil pic issue");
@@ -192,15 +169,15 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<InsertResult<game::Activ
     Game::insert(new_day).exec(db).await
 }
 
-pub async fn get_campus_users(db: &DatabaseConnection) -> Result<Vec<student_users::Model>, DbErr> {
-    StudentUsers::find().all(db).await
+pub async fn get_campus_users(db: &DatabaseConnection) -> Result<Vec<pool_users::Model>, DbErr> {
+    PoolUsers::find().all(db).await
 }
 
-pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<CampusUsers>) {
-    let _ = StudentUsers::delete_many().exec(db).await;
+pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<CampusStudent>) {
+    let _ = PoolUsers::delete_many().exec(db).await;
     let mut new_user: i32 = 0;
     for i in 0..campus_users.len() {
-        let record = student_users::ActiveModel {
+        let record = pool_users::ActiveModel {
             login: Set(campus_users[i].login.to_owned()),
             profile_pic: Set(campus_users[i]
                 .image
@@ -218,7 +195,7 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
             last_name: Set(campus_users[i].last_name.to_owned()),
             ..Default::default()
         };
-        match StudentUsers::insert(record).exec(db).await {
+        match PoolUsers::insert(record).exec(db).await {
             Ok(_) => {
                 new_user = new_user + 1;
             }
@@ -228,10 +205,4 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
     if new_user > 0 {
         println!("{} users created !", new_user);
     }
-}
-
-pub async fn get_user(db: &DatabaseConnection, login: String) -> Result<users::Model, DbErr> {
-    let user = Users::find_by_id(login).one(db).await?;
-    let user: users::Model = user.unwrap().into();
-    Ok(user)
 }

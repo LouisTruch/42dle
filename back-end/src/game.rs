@@ -3,7 +3,7 @@ use rocket::{State, http::Status, serde::json::Json, form::Form};
 use sea_orm::DatabaseConnection;
 
 use crate::db;
-use crate::auth::Token;
+use crate::auth::{Token, Situation};
 use crate::entities::users;
 use crate::extarnal_api::{CampusStudent, get_users_campus};
 
@@ -41,10 +41,16 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token:
 #[get("/update-db")]
 pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar: &CookieJar<'_>) {
     match token {
-        Some(_cookie) => {
+        Some(cookie) => {
             let coke = jar.get_private("token").unwrap().clone();
-            let users_campus: Vec<CampusStudent> = get_users_campus(coke.value().to_string()).await;
-            db::update_campus_user(&db, users_campus).await;
+            if cookie.user_data.split(";").last().unwrap() == Situation::Stud.to_string() {
+                let users_campus: Vec<CampusStudent> = get_users_campus(coke.value().to_string()).await;
+                db::update_campus_user(&db, users_campus).await;
+            } else {
+                let users_campus: Vec<CampusStudent> = get_users_campus(coke.value().to_string()).await;
+                db::update_campus_user(&db, users_campus).await;
+            }
+
         }
         None => {
             println!("You are not log in.");

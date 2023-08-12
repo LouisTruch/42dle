@@ -13,7 +13,7 @@ export async function GET(requestEvent: RequestEvent) {
 			cookies = '';
 		}
 	}
-	const response = await fetch(env.api + '/game/update-pool-db', {
+	const response = await fetch(env.api + '/game/update-student-db', {
 		method: 'GET',
 		credentials: 'include',
 		headers: { cookie: cookies },

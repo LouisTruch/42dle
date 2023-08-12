@@ -54,6 +54,7 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
+    println!("{id}");
     let game: Option<game::Model> = Game::find_by_id(id).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.expect("update_try_by_login: no user to guess").into();
 
@@ -139,7 +140,7 @@ async fn generate_images(stud: student_users::Model) {
     }
 }
 
-pub async fn new_day(db: &DatabaseConnection) -> Result<InsertResult<game::ActiveModel>, DbErr> {
+pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr> {
     let students = get_campus_users(&db).await?;
     if students == [] {
         return Err(DbErr::RecordNotFound(
@@ -161,20 +162,58 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<InsertResult<game::Activ
         user.r#try = Set(vec![]);
         user.update(db).await?;
     }
-
-    // Create a new user to guess to add in game tables
-    println!("{:?}", students[index]);
-    let new_day = game::ActiveModel {
+    // match Game::find_by_id(1).one(db).await {
+    //     Ok(student_guess) => {
+    //         if student_guess != None {
+    //             let mut student_guess = student_guess.unwrap().into();
+    //             student_guess = game::ActiveModel {
+    //                 id: Set(1),
+    //                 login_to_find: Set(students[index].login.to_owned()),
+    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
+    //                 first_name: Set(students[index].first_name.to_owned()),
+    //                 last_name: Set(students[index].last_name.to_owned()),
+    //                 ..Default::default()
+    //             };
+    //             student_guess.clone().update(db).await?;
+    //             println!("{:?}", student_guess);
+    //             Ok(student_guess)
+    //         } else {
+    //             let add_student_guess = game::ActiveModel {
+    //                 id: Set(1),
+    //                 login_to_find: Set(students[index].login.to_owned()),
+    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
+    //                 first_name: Set(students[index].first_name.to_owned()),
+    //                 last_name: Set(students[index].last_name.to_owned()),
+    //                 ..Default::default()
+    //             };
+    //             Game::insert(add_student_guess.clone()).exec(db).await?;
+    //             println!("{:?}", add_student_guess);
+    //             Ok(add_student_guess)
+    //         }
+    //     },
+    //     Err(e) => Err(e)
+    // }
+    let add_student_guess = game::ActiveModel {
+        id: Set(1),
         login_to_find: Set(students[index].login.to_owned()),
         profile_pic: Set(students[index].profile_pic.to_owned()),
         first_name: Set(students[index].first_name.to_owned()),
         last_name: Set(students[index].last_name.to_owned()),
         ..Default::default()
     };
-
-    // Insert in game tables and return the Result
-    Game::delete_by_id(1).exec(db).await?;
-    Game::insert(new_day).exec(db).await
+    
+    match Game::find_by_id(1).one(db).await? {
+        Some(_) => {
+            add_student_guess.clone().update(db).await?;
+            println!("{:?}", add_student_guess);
+            Ok(add_student_guess)
+        },
+        None => {
+            Game::insert(add_student_guess.clone()).exec(db).await?;
+            println!("{:?}", add_student_guess);
+            Ok(add_student_guess)
+        }
+    }
 }
 
 pub async fn get_campus_users(db: &DatabaseConnection) -> Result<Vec<student_users::Model>, DbErr> {

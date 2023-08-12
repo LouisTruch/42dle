@@ -1,6 +1,6 @@
 use crate::{
     auth::{Token, Situation},
-    entities::{prelude::*, *},
+    entities::{prelude::*, *, self},
     extarnal_api::CampusUsers,
 };
 use image;
@@ -35,9 +35,9 @@ pub async fn new_user(
         profile_pic: Set(profile_pic.to_owned()),
         student: Set(bool_situation),
         r#try: Set(vec![]),
+        pokedex: Set(vec![]),
         ..Default::default()
     };
-
     // Insert in users tables and return the Result
     Users::insert(record).exec(db).await
 }
@@ -54,7 +54,6 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
-    println!("{id}");
     let game: Option<game::Model> = Game::find_by_id(id).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.expect("update_try_by_login: no user to guess").into();
 
@@ -67,6 +66,11 @@ pub async fn update_try_by_login(
         if score_to_add <= 0 {
             score_to_add = 1;
         }
+        
+        let mut pokedex_vec: Vec<String> = users.pokedex.unwrap().into();
+        pokedex_vec.push(new_try.to_string());
+        users.pokedex = Set(pokedex_vec);
+
         users.score = Set(nb_score + score_to_add as i32);
         users.win = Set(true);
     }
@@ -100,15 +104,18 @@ pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, D
         .await
 }
 
-async fn generate_images(stud: student_users::Model) {
+pub async fn generate_images(stud: student_users::Model, game_mode: &str) {
     let img_bytes = reqwest::get(stud.profile_pic)
         .await
         .expect("generate_images: Get request to 42's api for profil pic issue");
+    let path_initiale = game_mode.to_string() + "/pool_target_";
+    let mut first_image = path_initiale.clone();
+    first_image.push_str("0.jpeg");
 
-    fs::create_dir_all("./images").expect("generate_images: fail to create directory");
-
+    fs::create_dir_all(game_mode).expect("generate_images: fail to create directory");
+    let create_first_image = first_image.clone();
     let mut file =
-        File::create("./images/student_target_0.jpeg").expect("generate_images: fail to create file");
+        File::create(create_first_image).expect("generate_images: fail to create file");
 
     let mut content = Cursor::new(
         img_bytes
@@ -119,12 +126,12 @@ async fn generate_images(stud: student_users::Model) {
     copy(&mut content, &mut file).expect("generate_images: fail to copy data into image");
 
     for i in 0..7 {
-        let mut path: String = String::from("./images/student_target_").to_owned();
+        let mut path: String = path_initiale.clone();
         path.push_str(i.to_string().as_str());
         path.push_str(".jpeg");
 
         let mut image =
-            image::open("./images/student_target_0.jpeg").expect("generate_images: fail to open iamge");
+            image::open(first_image.clone()).expect("generate_images: fail to open iamge");
         image = if i > 4 { image.grayscale() } else { image };
         image = if i == 4 { image.huerotate(180) } else { image };
         image = if i == 3 { image.rotate180() } else { image };
@@ -140,7 +147,7 @@ async fn generate_images(stud: student_users::Model) {
     }
 }
 
-pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr> {
+pub async fn random_user (db: &DatabaseConnection) -> Result<entities::student_users::Model, DbErr>{
     let students = get_campus_users(&db).await?;
     if students == [] {
         return Err(DbErr::RecordNotFound(
@@ -149,8 +156,19 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
     }
     let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
+    let student = &students[index];
+    Ok(student.clone())
+}
 
-    generate_images(students[index].clone()).await;
+
+pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr> {
+    let student: entities::student_users::Model = match random_user(&db).await {
+        Ok(stud) => { stud }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    generate_images(student.clone(), "./images").await;
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 
@@ -162,43 +180,13 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
         user.r#try = Set(vec![]);
         user.update(db).await?;
     }
-    // match Game::find_by_id(1).one(db).await {
-    //     Ok(student_guess) => {
-    //         if student_guess != None {
-    //             let mut student_guess = student_guess.unwrap().into();
-    //             student_guess = game::ActiveModel {
-    //                 id: Set(1),
-    //                 login_to_find: Set(students[index].login.to_owned()),
-    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
-    //                 first_name: Set(students[index].first_name.to_owned()),
-    //                 last_name: Set(students[index].last_name.to_owned()),
-    //                 ..Default::default()
-    //             };
-    //             student_guess.clone().update(db).await?;
-    //             println!("{:?}", student_guess);
-    //             Ok(student_guess)
-    //         } else {
-    //             let add_student_guess = game::ActiveModel {
-    //                 id: Set(1),
-    //                 login_to_find: Set(students[index].login.to_owned()),
-    //                 profile_pic: Set(students[index].profile_pic.to_owned()),
-    //                 first_name: Set(students[index].first_name.to_owned()),
-    //                 last_name: Set(students[index].last_name.to_owned()),
-    //                 ..Default::default()
-    //             };
-    //             Game::insert(add_student_guess.clone()).exec(db).await?;
-    //             println!("{:?}", add_student_guess);
-    //             Ok(add_student_guess)
-    //         }
-    //     },
-    //     Err(e) => Err(e)
-    // }
+
     let add_student_guess = game::ActiveModel {
         id: Set(1),
-        login_to_find: Set(students[index].login.to_owned()),
-        profile_pic: Set(students[index].profile_pic.to_owned()),
-        first_name: Set(students[index].first_name.to_owned()),
-        last_name: Set(students[index].last_name.to_owned()),
+        login_to_find: Set(student.login.to_owned()),
+        profile_pic: Set(student.profile_pic.to_owned()),
+        first_name: Set(student.first_name.to_owned()),
+        last_name: Set(student.last_name.to_owned()),
         ..Default::default()
     };
     

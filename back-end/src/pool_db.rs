@@ -1,6 +1,6 @@
 use crate::{
     auth::Token,
-    entities::{prelude::*, *}, extarnal_api::CampusUsers,
+    entities::{prelude::*, *, self}, extarnal_api::CampusUsers,
 };
 use image;
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -35,15 +35,18 @@ pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, D
         .await
 }
 
-async fn generate_images(stud: pool_users::Model) {
+pub async fn generate_images(stud: pool_users::Model, game_mode: &str) {
     let img_bytes = reqwest::get(stud.profile_pic)
         .await
         .expect("generate_images: Get request to 42's api for profil pic issue");
+    let path_initiale = game_mode.to_string() + "/pool_target_";
+    let mut first_image = path_initiale.clone();
+    first_image.push_str("0.jpeg");
 
-    fs::create_dir_all("./images").expect("generate_images: fail to create directory");
-
+    fs::create_dir_all(game_mode).expect("generate_images: fail to create directory");
+    let create_first_image = first_image.clone();
     let mut file =
-        File::create("./images/pool_target_0.jpeg").expect("generate_images: fail to create file");
+        File::create(create_first_image).expect("generate_images: fail to create file");
 
     let mut content = Cursor::new(
         img_bytes
@@ -54,12 +57,12 @@ async fn generate_images(stud: pool_users::Model) {
     copy(&mut content, &mut file).expect("generate_images: fail to copy data into image");
 
     for i in 0..7 {
-        let mut path: String = String::from("./images/pool_target_").to_owned();
+        let mut path: String = path_initiale.clone();
         path.push_str(i.to_string().as_str());
         path.push_str(".jpeg");
 
         let mut image =
-            image::open("./images/pool_target_0.jpeg").expect("generate_images: fail to open iamge");
+            image::open(first_image.clone()).expect("generate_images: fail to open iamge");
         image = if i > 4 { image.grayscale() } else { image };
         image = if i == 4 { image.huerotate(180) } else { image };
         image = if i == 3 { image.rotate180() } else { image };
@@ -75,7 +78,7 @@ async fn generate_images(stud: pool_users::Model) {
     }
 }
 
-pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr> {
+pub async fn random_user (db: &DatabaseConnection) -> Result<entities::pool_users::Model, DbErr>{
     let students = get_campus_users(&db).await?;
     if students == [] {
         return Err(DbErr::RecordNotFound(
@@ -84,8 +87,19 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
     }
     let mut rng = StdRng::from_rng(rand::thread_rng()).unwrap();
     let index = rng.gen_range(0..students.len());
+    let student = &students[index];
+    Ok(student.clone())
+}
 
-    generate_images(students[index].clone()).await;
+pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr> {
+    
+    let student: entities::pool_users::Model = match random_user(&db).await {
+        Ok(stud) => { stud }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    generate_images(student.clone(), "./images").await;
     // Get all users
     let users: Vec<users::Model> = Users::find().all(db).await?;
 
@@ -98,36 +112,26 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<game::ActiveModel, DbErr
         user.update(db).await?;
     }
 
-    match Game::find_by_id(2).one(db).await {
-        Ok(pool_guess) => {
-            if pool_guess != None {
-                let mut pool_guess = pool_guess.unwrap().into();
-                pool_guess = game::ActiveModel {
-                    id: Set(2),
-                    login_to_find: Set(students[index].login.to_owned()),
-                    profile_pic: Set(students[index].profile_pic.to_owned()),
-                    first_name: Set(students[index].first_name.to_owned()),
-                    last_name: Set(students[index].last_name.to_owned()),
-                    ..Default::default()
-                };
-                pool_guess.clone().update(db).await?;
-                println!("{:?}", pool_guess);
-                Ok(pool_guess)
-            } else {
-                let add_pool_guess = game::ActiveModel {
-                    id: Set(2),
-                    login_to_find: Set(students[index].login.to_owned()),
-                    profile_pic: Set(students[index].profile_pic.to_owned()),
-                    first_name: Set(students[index].first_name.to_owned()),
-                    last_name: Set(students[index].last_name.to_owned()),
-                    ..Default::default()
-                };
-                Game::insert(add_pool_guess.clone()).exec(db).await?;
-                println!("{:?}", add_pool_guess);
-                Ok(add_pool_guess)
-            }
+    let add_pool_guess = game::ActiveModel {
+        id: Set(2),
+        login_to_find: Set(student.login.to_owned()),
+        profile_pic: Set(student.profile_pic.to_owned()),
+        first_name: Set(student.first_name.to_owned()),
+        last_name: Set(student.last_name.to_owned()),
+        ..Default::default()
+    };
+    
+    match Game::find_by_id(2).one(db).await? {
+        Some(_) => {
+            add_pool_guess.clone().update(db).await?;
+            println!("{:?}", add_pool_guess);
+            Ok(add_pool_guess)
         },
-        Err(e) => Err(e)
+        None => {
+            Game::insert(add_pool_guess.clone()).exec(db).await?;
+            println!("{:?}", add_pool_guess);
+            Ok(add_pool_guess)
+        }
     }
 }
 
@@ -168,10 +172,3 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
         println!("{} users created !", new_user);
     }
 }
-
-// pub async fn get_pokedex(db: &DatabaseConnection, login: String) -> Result<Vec<pool_users::Model>, DbErr>{
-//     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
-//     let user: users::ActiveModel = user.unwrap().into();
-
-//     Ok(user.pokedex())
-// }

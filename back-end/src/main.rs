@@ -6,8 +6,8 @@ mod entities;
 mod game;
 mod extarnal_api;
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection};
-use rocket::fairing::{Fairing, Info, Kind, AdHoc};
+use sea_orm::{Database, DatabaseConnection, ConnectionTrait, Statement};
+use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{Request, Response, Config};
 use dotenv::dotenv;
@@ -24,6 +24,7 @@ async fn rocket() -> _ {
     env_logger::Builder::new()
         .filter_level(log::LevelFilter::Warn)
         .init();
+    
     dotenv().ok();
     // Connect to the database and panic if fail
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
@@ -70,6 +71,7 @@ async fn rocket() -> _ {
             game::get_leaderboard,
             game::get_pool_users,
             game::get_student_users,
+            game::init_speedrun,
         ])
 
 }

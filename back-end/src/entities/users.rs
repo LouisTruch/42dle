@@ -9,6 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub login: String,
     pub profile_pic: String,
+    pub pokedex: Vec<String>,
     pub score: i32,
     pub r#try: Vec<String>,
     pub win: bool,
@@ -17,5 +18,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
+
 
 impl ActiveModelBehavior for ActiveModel {}

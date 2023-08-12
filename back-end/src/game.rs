@@ -175,21 +175,22 @@ pub async fn get_pool_users(
     }
 }
 
-// #[get("/pokedex")]
-// pub async fn pokedex(
-//     token: Option<Token>,
-//     db: &State<DatabaseConnection>,
-// ) -> Result<Json<Vec<pool_users::Model>>, Status> {
-//     match token {
-//         Some(cookie) => {
-//             match pool_db::get_pokedex(db, cookie.user_data.split(";").next().unwrap().to_string()).await {
-//                 Ok(result) => Ok(Json(result)),
-//                 Err(_) => Err(Status { code: 404 }),
-//             }
-//         }
-//         None => {
-//             println!("You are not logged in");
-//             Err(Status { code: 401 })
-//         }
-//     }
-// }
+#[get("/init-speedrun")]
+pub async fn init_speedrun(
+    token: Option<Token>,
+    db: &State<DatabaseConnection>,
+)  {
+    if let Some(cookie) = token {
+        if cookie.user_data.split(";").last().unwrap() == Situation::Pool.to_string(){
+            let time_initiale = chrono::Utc::now().timestamp();
+            // student_db::begin_speedrun(db, cookie.user_data.split(";").next().unwrap(), time_initiale);
+            let pool_user: pool_users::Model = pool_db::random_user(&db).await.unwrap();
+            pool_db::generate_images(pool_user, "./speedrun").await;
+        } else {
+            let time_initiale = chrono::Utc::now().timestamp();
+            // student_db::begin_speedrun(db, cookie.user_data.split(";").next().unwrap(), time_initiale);
+            let stud: student_users::Model = student_db::random_user(&db).await.unwrap();
+            student_db::generate_images(stud, "./speedrun").await;
+        }
+    } else { println!("You are not logged in"); };
+}

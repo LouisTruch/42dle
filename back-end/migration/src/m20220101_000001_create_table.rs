@@ -8,6 +8,34 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
 
         manager
+        .create_table(
+            Table::create()
+            .table(StudentUsers::Table)
+            .if_not_exists()
+            .col(ColumnDef::new(StudentUsers::Login).string().not_null().primary_key())
+            .col(ColumnDef::new(StudentUsers::FirstName).string().not_null())
+            .col(ColumnDef::new(StudentUsers::LastName).string().not_null())
+            .col(ColumnDef::new(StudentUsers::ProfilePic).string().not_null())
+            .to_owned()
+        )
+        .await
+        .unwrap();
+
+    manager
+        .create_table(
+            Table::create()
+            .table(PoolUsers::Table)
+            .if_not_exists()
+            .col(ColumnDef::new(PoolUsers::Login).string().not_null().primary_key())
+            .col(ColumnDef::new(PoolUsers::FirstName).string().not_null())
+            .col(ColumnDef::new(PoolUsers::LastName).string().not_null())
+            .col(ColumnDef::new(PoolUsers::ProfilePic).string().not_null())
+            .to_owned()
+        )
+        .await
+        .unwrap();
+    
+        manager
             .create_table(
                 Table::create()
                     .table(Users::Table)
@@ -19,6 +47,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Users::ProfilePic).string().not_null())
+                    .col(ColumnDef::new(Users::Pokedex).array(ColumnType::String(Some(12))).not_null())
                     .col(ColumnDef::new(Users::Score).integer().default(0).not_null())
                     .col(ColumnDef::new(Users::Try).array(ColumnType::String(Some(12))).not_null())
                     .col(ColumnDef::new(Users::Win).boolean().not_null().default(false))
@@ -41,36 +70,6 @@ impl MigrationTrait for Migration {
                 .to_owned()
             )
             .await
-            .unwrap();
-
-        manager
-            .create_table(
-                Table::create()
-                .table(StudentUsers::Table)
-                .if_not_exists()
-                .col(ColumnDef::new(StudentUsers::Login).string().not_null().primary_key())
-                .col(ColumnDef::new(StudentUsers::FirstName).string().not_null())
-                .col(ColumnDef::new(StudentUsers::LastName).string().not_null())
-                .col(ColumnDef::new(StudentUsers::ProfilePic).string().not_null())
-                .to_owned()
-            )
-            .await
-            .unwrap();
-
-        manager
-            .create_table(
-                Table::create()
-                .table(PoolUsers::Table)
-                .if_not_exists()
-                .col(ColumnDef::new(PoolUsers::Login).string().not_null().primary_key())
-                .col(ColumnDef::new(PoolUsers::FirstName).string().not_null())
-                .col(ColumnDef::new(PoolUsers::LastName).string().not_null())
-                .col(ColumnDef::new(PoolUsers::ProfilePic).string().not_null())
-                .to_owned()
-            )
-            .await
-
- 
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -102,6 +101,7 @@ enum Users {
     Table,
     Login,
     ProfilePic,
+    Pokedex,
     Score,
     Try,
     Win,

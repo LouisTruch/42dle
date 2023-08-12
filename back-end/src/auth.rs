@@ -18,8 +18,15 @@ pub struct ApiToken {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Token{pub user_id: String}
+pub struct Token{
+    pub user_data: String
+}
 
+#[derive(strum_macros::Display)]
+pub enum Situation {
+    Stud,
+    Pool
+}
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for Token {
@@ -28,12 +35,13 @@ impl<'r> FromRequest<'r> for Token {
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let cookie_content = request
         .cookies()
-        .get_private("user_id")
+        .get_private("user_data")
         .and_then(|cookie| cookie.value().parse().ok())
-        .map(|id| Token{user_id: id}.user_id);
+        .map(|data| Token{user_data: data}.user_data);
         match cookie_content {
-            Some(user_id) => {
-                return Outcome::Success(Token { user_id: (user_id) });
+            Some(user_data) => {
+                println!("cookie: {user_data}");
+                return Outcome::Success(Token { user_data: (user_data) });
             }
             None => {
                 return Outcome::Failure(
@@ -44,9 +52,15 @@ impl<'r> FromRequest<'r> for Token {
     }
 }
 
-fn generate_cookie(value: &String, cookie: &CookieJar<'_>, name: String) -> (){
-    // Create new cookie with user_id as name and login as value
-    let mut new_cookie = Cookie::new(name, value.clone());
+fn generate_cookie(value: &String, cookie: &CookieJar<'_>, name: String, situation: String) -> (){
+    // Create new cookie with user_data as name and login as value
+    let final_value = if name == "user_data" {
+        let mut vec: Vec<String> = Vec::with_capacity(2); 
+        vec.push(value.clone());
+        vec.push(situation);
+        vec.join(";")
+    } else { value.clone() };
+    let mut new_cookie = Cookie::new(name, final_value);
     // set cookie to be lax with SameSite
     // new_cookie.secure();
     new_cookie.set_secure(false);
@@ -66,7 +80,7 @@ fn generate_admin_cookie(token: &String, cookie: &CookieJar<'_>, login: &String)
     let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
     let admin_name: Vec<&str> = admin_list.split(";").collect();
     if admin_name.contains(&&login.as_str()){
-        generate_cookie(&token, cookie, String::from("token"));
+        generate_cookie(&token, cookie, String::from("token"), String::new());
     }
 }
 
@@ -81,16 +95,16 @@ fn generate_admin_cookie(token: &String, cookie: &CookieJar<'_>, login: &String)
 pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, code: &str, cookie: &CookieJar<'_>) -> () {
     match token {
         Some(cookie) => {
-            println!("already a cookie for {}", cookie.user_id);
+            println!("already a cookie for {}", cookie.user_data.split(";").next().unwrap());
             return ();
         }
         None => {}
     }
 
     let token = generate_token(code).await;
-    let (login, img) = get_user_data(token.clone()).await;
+    let (login, img, situation) = get_user_data(token.clone()).await;
     generate_admin_cookie(&token, cookie, &login);
-    generate_cookie(&login, cookie, String::from("user_id"));
+    generate_cookie(&login, cookie, String::from("user_data"), situation);
     match db::new_user(&db, &login, &img).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
@@ -104,9 +118,9 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
 pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     match token {
         Some(_) => {
-            let coke = jar.get_private("user_id").unwrap().clone();
+            let coke = jar.get_private("user_data").unwrap().clone();
             println!("Remove session cookie of {}", coke.value().to_string());
-            jar.remove_private(Cookie::named("user_id"));
+            jar.remove_private(Cookie::named("user_data"));
         }
         None => {
             println!("You can't logout");
@@ -119,7 +133,7 @@ pub async fn get_info(token: Option<Token>, db: &State<DatabaseConnection>
 ) -> Result<Json<users::Model>, Status> {
     match token {
         Some(cookie) => {
-            match db::get_user(db, cookie.user_id).await {
+            match db::get_user(db, cookie.user_data.split(";").next().unwrap().to_string()).await {
                 Ok(res) => Ok(Json(res)),
                 Err(_) => Err(Status {code: 404})
             }
@@ -137,7 +151,7 @@ pub async fn is_admin(token: Option<Token>) -> Result<Json<bool>, Status> {
         Some(login) => {
             let admin_list: String =  env::var("ADMIN_LIST").expect("ADMIN_LIST not found in .env");
             let admin_name: Vec<&str> = admin_list.split(";").collect();
-            if admin_name.contains(&&login.user_id.as_str()){
+            if admin_name.contains(&&login.user_data.split(";").next().unwrap()){
                 Ok(Json(true))
             } else {
                 Err(Status { code: 403 })

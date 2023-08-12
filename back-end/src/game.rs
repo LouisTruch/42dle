@@ -19,7 +19,7 @@ pub async fn game_try(data: Form<NewTry>, db: &State<DatabaseConnection>, token:
 ) -> Result<Json<users::Model>, Status> {
     match token {
         Some(cookie) => {
-            match db::update_try_by_login(&db, cookie.user_id, data.login_to_guess.clone()).await {
+            match db::update_try_by_login(&db, cookie.user_data.split(";").next().unwrap().to_string(), data.login_to_guess.clone()).await {
                 Ok(res) => {
                     if res.win == true {
                         Ok(Json(res))
@@ -73,7 +73,7 @@ pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
 pub async fn get_guess_image(token: Option<Token>, db: &State<DatabaseConnection>) -> Result<Vec<u8>, Status> {
     match token {
         Some(cookie) => {
-            match db::get_user_image(&db, cookie.user_id).await {
+            match db::get_user_image(&db, cookie.user_data.split(";").next().unwrap().to_string()).await {
                 Ok(res) => Ok(res),
                 Err(_) => {
                     println!("get_guess_image: failed to load image");

@@ -35,6 +35,14 @@ pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, D
         .await
 }
 
+pub async fn speedrun_leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, DbErr> {
+    Users::find()
+        .filter(users::Column::Student.eq(false))
+        .order_by_desc(users::Column::Speedrun)
+        .all(db)
+        .await
+}
+
 async fn generate_images(stud: pool_users::Model) {
     let img_bytes = reqwest::get(stud.profile_pic)
         .await

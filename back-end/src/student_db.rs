@@ -68,7 +68,9 @@ pub async fn update_try_by_login(
         }
         
         let mut pokedex_vec: Vec<String> = users.pokedex.unwrap().into();
-        pokedex_vec.push(new_try.to_string());
+        if !pokedex_vec.contains(&new_try) {
+            pokedex_vec.push(new_try.to_string());
+        }
         users.pokedex = Set(pokedex_vec);
 
         users.score = Set(nb_score + score_to_add as i32);
@@ -100,6 +102,14 @@ pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, D
     Users::find()
         .filter(users::Column::Student.eq(true))
         .order_by_desc(users::Column::Score)
+        .all(db)
+        .await
+}
+
+pub async fn speedrun_leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, DbErr> {
+    Users::find()
+        .filter(users::Column::Student.eq(true))
+        .order_by_desc(users::Column::Speedrun)
         .all(db)
         .await
 }
@@ -232,4 +242,12 @@ pub async fn get_user(db: &DatabaseConnection, login: String) -> Result<users::M
     let user = Users::find_by_id(login).one(db).await?;
     let user: users::Model = user.unwrap().into();
     Ok(user)
+}
+
+pub async fn add_speedrun_time(db: &DatabaseConnection, login: String, time: f32
+) -> Result<users::Model, DbErr> {
+    let users: Option<users::Model> = Users::find_by_id(login).one(db).await?;
+    let mut users: users::ActiveModel = users.unwrap().into();
+    users.speedrun = Set(time);
+    users.update(db).await
 }

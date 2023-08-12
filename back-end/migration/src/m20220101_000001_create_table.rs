@@ -49,6 +49,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Users::ProfilePic).string().not_null())
                     .col(ColumnDef::new(Users::Pokedex).array(ColumnType::String(Some(12))).not_null())
                     .col(ColumnDef::new(Users::Score).integer().default(0).not_null())
+                    .col(ColumnDef::new(Users::Speedrun).float().default(0.0).not_null())
                     .col(ColumnDef::new(Users::Try).array(ColumnType::String(Some(12))).not_null())
                     .col(ColumnDef::new(Users::Win).boolean().not_null().default(false))
                     .col(ColumnDef::new(Users::Student).boolean().not_null().default(true))
@@ -103,6 +104,7 @@ enum Users {
     ProfilePic,
     Pokedex,
     Score,
+    Speedrun,
     Try,
     Win,
     Student

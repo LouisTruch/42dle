@@ -7,15 +7,14 @@ mod game;
 mod extarnal_api;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
-use rocket::fairing::{Fairing, Info, Kind};
+use rocket::fairing::{Fairing, Info, Kind, AdHoc};
 use rocket::http::Header;
-use rocket::{Request, Response};
+use rocket::{Request, Response, Config};
 use dotenv::dotenv;
 // use std::thread::{sleep, self};
 // use chrono::{Local, Duration};
 // use std::time::Duration;
 use rocket::tokio::time::{sleep, Duration};
-
 
 #[macro_use]
 extern crate rocket;
@@ -46,13 +45,11 @@ async fn rocket() -> _ {
     let db_clone: DatabaseConnection = db_conn.clone();
     tokio::spawn(daily_interval(db_clone));
   
-    let figment = rocket::config::Config::figment()
-    .merge(("secret_key", "F8h9L08qEiRWHLDun3aM43bi1tPPJRxUZqYTUDNWZOM="));
+    // let config = Config::SECRET_KEY;
+    // println!("SECRET KEY: {config}");
 
-    // let config = rocket::config::Config::from(figment);
-    // assert!(!config.secret_key.is_zero());
-
-    rocket::custom(figment).manage(db_conn)
+    rocket::build()
+        .manage(db_conn)
         .attach(Cors)
         .mount("/", routes![
             index::no_auth_index,
@@ -86,7 +83,7 @@ async fn daily_interval(db: DatabaseConnection) {
         // let duration = next_midnight.signed_duration_since(time_now).to_std().unwrap();
 
         // sleep(duration);
-        sleep(Duration::from_millis(10000)).await;
+        sleep(Duration::from_millis(20000)).await;
         println!("NEW TARGET GENERATED");
         {
             if let Err(e) = student_db::new_day(&db).await {

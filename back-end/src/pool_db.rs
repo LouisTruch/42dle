@@ -13,29 +13,7 @@ use std::{
     io::{copy, Cursor},
 };
 
-pub async fn new_user(
-    db: &DatabaseConnection,
-    login: &String,
-    profile_pic: &String,
-) -> Result<InsertResult<users::ActiveModel>, DbErr> {
-    // Check if users is already in db
-    let existing_user = Users::find_by_id(login).one(db).await?;
-    if existing_user.is_some() {
-        return Err(DbErr::RecordNotInserted);
-    }
-
-    // Create a record to add in users table
-    let record = users::ActiveModel {
-        login: Set(login.to_owned()),
-        profile_pic: Set(profile_pic.to_owned()),
-        r#try: Set(vec![]),
-        ..Default::default()
-    };
-
-    // Insert in users tables and return the Result
-    Users::insert(record).exec(db).await
-}
-
+//change id in game or take id in parameter
 pub async fn update_try_by_login(
     db: &DatabaseConnection,
     login: String,
@@ -69,7 +47,7 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
-#[get("/users")]
+#[get("/pool-users")]
 pub async fn get_all_users(
     token: Option<Token>,
     db: &State<DatabaseConnection>,
@@ -89,6 +67,7 @@ pub async fn get_all_users(
     }
 }
 
+// change path name
 pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Vec<u8>, DbErr> {
     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
     let user: users::ActiveModel = user.unwrap().into();
@@ -106,6 +85,7 @@ pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Ve
 
 pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, DbErr> {
     Users::find()
+        .filter(users::Column::Student.eq(false))
         .order_by_desc(users::Column::Score)
         .all(db)
         .await
@@ -225,10 +205,4 @@ pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<Campu
     if new_user > 0 {
         println!("{} users created !", new_user);
     }
-}
-
-pub async fn get_user(db: &DatabaseConnection, login: String) -> Result<users::Model, DbErr> {
-    let user = Users::find_by_id(login).one(db).await?;
-    let user: users::Model = user.unwrap().into();
-    Ok(user)
 }

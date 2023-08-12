@@ -13,6 +13,7 @@ use std::{
     io::{copy, Cursor},
 };
 
+// take bool to know if he his stud or not
 pub async fn new_user(
     db: &DatabaseConnection,
     login: &String,
@@ -106,6 +107,7 @@ pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Ve
 
 pub async fn leaderboard(db: &DatabaseConnection) -> Result<Vec<users::Model>, DbErr> {
     Users::find()
+        .filter(users::Column::Student.eq(true))
         .order_by_desc(users::Column::Score)
         .all(db)
         .await

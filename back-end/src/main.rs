@@ -46,8 +46,13 @@ async fn rocket() -> _ {
     let db_clone: DatabaseConnection = db_conn.clone();
     tokio::spawn(daily_interval(db_clone));
   
-    rocket::build()
-        .manage(db_conn)
+    let figment = rocket::config::Config::figment()
+    .merge(("secret_key", "F8h9L08qEiRWHLDun3aM43bi1tPPJRxUZqYTUDNWZOM="));
+
+    // let config = rocket::config::Config::from(figment);
+    // assert!(!config.secret_key.is_zero());
+
+    rocket::custom(figment).manage(db_conn)
         .attach(Cors)
         .mount("/", routes![
             index::no_auth_index,

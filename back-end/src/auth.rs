@@ -6,16 +6,10 @@ use rocket::time::{Duration, OffsetDateTime};
 use serde::{Deserialize, Serialize};
 use sea_orm::DatabaseConnection;
 use rocket::State;
-// use crate::game::{get_users_campus, CampusStudent};
 use crate::student_db;
 use crate::entities::users;
 use crate::extarnal_api::{get_user_data, generate_token};
 use rocket::request::*;
-
-#[derive(Deserialize)]
-pub struct ApiToken {
-    access_token: String,
-}
 
 #[derive(Deserialize, Serialize)]
 pub struct Token{
@@ -54,14 +48,10 @@ impl<'r> FromRequest<'r> for Token {
 fn generate_cookie(value: &String, cookie: &CookieJar<'_>, name: String, situation: String) -> (){
     // Create new cookie with user_data as name and login as value
     let final_value = if name == "user_data" {
-        let mut vec: Vec<String> = Vec::with_capacity(2); 
-        vec.push(value.clone());
-        vec.push(situation);
-        vec.join(";")
-    } else { value.clone() };
+        [value.clone(), situation].join(";")
+    } else { value.to_string() };
     let mut new_cookie = Cookie::new(name, final_value);
     // set cookie to be lax with SameSite
-    // new_cookie.secure();
     new_cookie.set_secure(false);
     new_cookie.set_same_site(SameSite::Lax);
     // set an expirassion of 1 hour to the cookie
@@ -117,9 +107,10 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
 pub fn logout(jar: &CookieJar<'_>, token: Option<Token>) {
     match token {
         Some(_) => {
-            let coke = jar.get_private("user_data").unwrap().clone();
-            println!("Remove session cookie of {}", coke.value().to_string());
+            let user_data = jar.get_private("user_data").unwrap().clone();
+            println!("Remove session cookie of {}", user_data.value().to_string());
             jar.remove_private(Cookie::named("user_data"));
+            jar.remove_private(Cookie::named("token"));
         }
         None => {
             println!("You can't logout");

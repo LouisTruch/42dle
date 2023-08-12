@@ -46,27 +46,6 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
-// #[get("/pool-users")]
-// pub async fn get_all_users(
-//     token: Option<Token>,
-//     db: &State<DatabaseConnection>,
-// ) -> Result<Json<Vec<pool_users::Model>>, Status> {
-//     match token {
-//         Some(_) => {
-//             let db: &DatabaseConnection = &db;
-//             match get_campus_users(db).await {
-//                 Ok(result) => Ok(Json(result)),
-//                 Err(_) => Err(Status { code: 404 }),
-//             }
-//         }
-//         None => {
-//             println!("You are not logged in");
-//             Err(Status { code: 401 })
-//         }
-//     }
-// }
-
-// change path name
 pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Vec<u8>, DbErr> {
     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
     let user: users::ActiveModel = user.unwrap().into();

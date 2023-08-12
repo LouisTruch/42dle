@@ -179,41 +179,13 @@ pub async fn get_students (token: String, situation: String) -> Vec<CampusUsers>
 
 // for each user: verify if he has a profil pic, isn't alunmi & if he is active
 fn verify_user(users: &mut Vec<CampusUsers>, i: usize) -> bool{
-    match &users[i].image {
-        Some(img_data) => {
-            match &img_data.versions {
-                Some(version) => {
-                    match &version.medium {
-                        Some(_img) => {},
-                        None => { 
-                            return false;
-                        }
-                    }
-                },
-                None => { 
-                    return false;
-                }
-            }
-        },
-        None => { 
-            return false;
-        }
-    };
-    let alumni = match users[i].alumni {
-        Some(val) => {val},
-        None => {true}
-    };
-    let active = match users[i].active {
-        Some(val) => {val},
-        None => {false}
-    };
-    // if let Some(img_data) = &users[i].image {
-    //     if let Some(version) = &img_data.versions {
-    //         if version.medium.is_none() { return false; }
-    //     } else { return false; }
-    // } else { return false; }
-    // let alumni = users[i].alumni.unwrap_or(true);
-    // let active = users[i].active.unwrap_or(false);
+    if let Some(img_data) = &users[i].image {
+        if let Some(version) = &img_data.versions {
+            if version.medium.is_none() { return false; }
+        } else { return false; }
+    } else { return false; }
+    let alumni = users[i].alumni.unwrap_or(true);
+    let active = users[i].active.unwrap_or(false);
     if alumni == true || active == false 
         || users[i].last_name == "Angoule" || users[i].last_name == "Angouleme"{
         return false;

@@ -40,7 +40,6 @@ impl<'r> FromRequest<'r> for Token {
         .map(|data| Token{user_data: data}.user_data);
         match cookie_content {
             Some(user_data) => {
-                println!("cookie: {user_data}");
                 return Outcome::Success(Token { user_data: (user_data) });
             }
             None => {
@@ -104,8 +103,8 @@ pub async fn init_session(token: Option<Token>, db: &State<DatabaseConnection>, 
     let token = generate_token(code).await;
     let (login, img, situation) = get_user_data(token.clone()).await;
     generate_admin_cookie(&token, cookie, &login);
-    generate_cookie(&login, cookie, String::from("user_data"), situation);
-    match student_db::new_user(&db, &login, &img).await {
+    generate_cookie(&login, cookie, String::from("user_data"), situation.clone());
+    match student_db::new_user(&db, &login, &img, situation).await {
         Ok(_) => println!("{login} was created in db"),
         Err(_e) => {
             println!("init_session: {_e}");
@@ -155,6 +154,23 @@ pub async fn is_admin(token: Option<Token>) -> Result<Json<bool>, Status> {
                 Ok(Json(true))
             } else {
                 Err(Status { code: 403 })
+            }
+        }
+        None => {
+            println!("is_admin: You are not log in.");
+            Err(Status { code: 401 })
+        }
+    }
+}
+
+#[get("/situation")]
+pub async fn situation(token: Option<Token>) -> Result<Json<String>, Status> {
+    match token {
+        Some(cookie) => {
+            if cookie.user_data.split(";").last().unwrap() == Situation::Stud.to_string(){
+                Ok(Json(Situation::Stud.to_string()))
+            } else{ 
+                Ok(Json(Situation::Pool.to_string()))
             }
         }
         None => {

@@ -1,5 +1,5 @@
 use crate::{
-    auth::Token,
+    auth::{Token, Situation},
     entities::{prelude::*, *},
     extarnal_api::CampusUsers,
 };
@@ -18,17 +18,22 @@ pub async fn new_user(
     db: &DatabaseConnection,
     login: &String,
     profile_pic: &String,
+    situation: String,
 ) -> Result<InsertResult<users::ActiveModel>, DbErr> {
     // Check if users is already in db
     let existing_user = Users::find_by_id(login).one(db).await?;
     if existing_user.is_some() {
         return Err(DbErr::RecordNotInserted);
     }
+    let bool_situation: bool = if situation == Situation::Pool.to_string(){
+         false 
+    } else { true };
 
     // Create a record to add in users table
     let record = users::ActiveModel {
         login: Set(login.to_owned()),
         profile_pic: Set(profile_pic.to_owned()),
+        student: Set(bool_situation),
         r#try: Set(vec![]),
         ..Default::default()
     };
@@ -41,6 +46,7 @@ pub async fn update_try_by_login(
     db: &DatabaseConnection,
     login: String,
     new_try: String,
+    id: i8
 ) -> Result<users::Model, DbErr> {
     // Find users in db with login ( primary key ) and update with new try
     let users: Option<users::Model> = Users::find_by_id(login).one(db).await?;
@@ -48,7 +54,7 @@ pub async fn update_try_by_login(
     let mut new_vec: Vec<String> = users.r#try.unwrap().into();
     new_vec.push(new_try.to_string());
 
-    let game: Option<game::Model> = Game::find_by_id(1).one(db).await?; // change it after
+    let game: Option<game::Model> = Game::find_by_id(id).one(db).await?; // change it after
     let mut game: game::ActiveModel = game.expect("update_try_by_login: no user to guess").into();
 
     // Check if try is equal to login of the day
@@ -70,32 +76,11 @@ pub async fn update_try_by_login(
     users.update(db).await
 }
 
-// demander a Armand pour le token
-#[get("/users")]
-pub async fn get_all_users(
-    token: Option<Token>,
-    db: &State<DatabaseConnection>,
-) -> Result<Json<Vec<student_users::Model>>, Status> {
-    match token {
-        Some(_) => {
-            let db: &DatabaseConnection = &db;
-            match get_campus_users(db).await {
-                Ok(result) => Ok(Json(result)),
-                Err(_) => Err(Status { code: 404 }),
-            }
-        }
-        None => {
-            println!("You are not logged in");
-            Err(Status { code: 401 })
-        }
-    }
-}
-
 pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Vec<u8>, DbErr> {
     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
     let user: users::ActiveModel = user.unwrap().into();
     let vec: Vec<String> = user.r#try.unwrap().into();
-    let mut path_to_image: String = String::from("./images/target_").to_owned();
+    let mut path_to_image: String = String::from("./images/student_target_").to_owned();
     if vec.len() > 6 || user.win.unwrap().into() {
         path_to_image.push_str("0");
     } else {
@@ -122,7 +107,7 @@ async fn generate_images(stud: student_users::Model) {
     fs::create_dir_all("./images").expect("generate_images: fail to create directory");
 
     let mut file =
-        File::create("./images/target_0.jpeg").expect("generate_images: fail to create file");
+        File::create("./images/student_target_0.jpeg").expect("generate_images: fail to create file");
 
     let mut content = Cursor::new(
         img_bytes
@@ -133,12 +118,12 @@ async fn generate_images(stud: student_users::Model) {
     copy(&mut content, &mut file).expect("generate_images: fail to copy data into image");
 
     for i in 0..7 {
-        let mut path: String = String::from("./images/target_").to_owned();
+        let mut path: String = String::from("./images/student_target_").to_owned();
         path.push_str(i.to_string().as_str());
         path.push_str(".jpeg");
 
         let mut image =
-            image::open("./images/target_0.jpeg").expect("generate_images: fail to open iamge");
+            image::open("./images/student_target_0.jpeg").expect("generate_images: fail to open iamge");
         image = if i > 4 { image.grayscale() } else { image };
         image = if i == 4 { image.huerotate(180) } else { image };
         image = if i == 3 { image.rotate180() } else { image };

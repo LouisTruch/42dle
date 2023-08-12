@@ -1,7 +1,6 @@
 use crate::{
     auth::Token,
-    entities::{prelude::*, *},
-    extarnal_api::CampusStudent,
+    entities::{prelude::*, *}, extarnal_api::CampusUsers,
 };
 use image;
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -72,7 +71,7 @@ pub async fn get_user_image(db: &DatabaseConnection, login: String) -> Result<Ve
     let user: Option<users::Model> = Users::find_by_id(login).one(db).await?;
     let user: users::ActiveModel = user.unwrap().into();
     let vec: Vec<String> = user.r#try.unwrap().into();
-    let mut path_to_image: String = String::from("./images/target_").to_owned();
+    let mut path_to_image: String = String::from("./images/pool_target_").to_owned();
     if vec.len() > 6 || user.win.unwrap().into() {
         path_to_image.push_str("0");
     } else {
@@ -99,7 +98,7 @@ async fn generate_images(stud: pool_users::Model) {
     fs::create_dir_all("./images").expect("generate_images: fail to create directory");
 
     let mut file =
-        File::create("./images/target_0.jpeg").expect("generate_images: fail to create file");
+        File::create("./images/pool_target_0.jpeg").expect("generate_images: fail to create file");
 
     let mut content = Cursor::new(
         img_bytes
@@ -110,12 +109,12 @@ async fn generate_images(stud: pool_users::Model) {
     copy(&mut content, &mut file).expect("generate_images: fail to copy data into image");
 
     for i in 0..7 {
-        let mut path: String = String::from("./images/target_").to_owned();
+        let mut path: String = String::from("./images/pool_target_").to_owned();
         path.push_str(i.to_string().as_str());
         path.push_str(".jpeg");
 
         let mut image =
-            image::open("./images/target_0.jpeg").expect("generate_images: fail to open iamge");
+            image::open("./images/pool_target_0.jpeg").expect("generate_images: fail to open iamge");
         image = if i > 4 { image.grayscale() } else { image };
         image = if i == 4 { image.huerotate(180) } else { image };
         image = if i == 3 { image.rotate180() } else { image };
@@ -165,7 +164,7 @@ pub async fn new_day(db: &DatabaseConnection) -> Result<InsertResult<game::Activ
     };
 
     // Insert in game tables and return the Result
-    Game::delete_by_id(1).exec(db).await?;
+    Game::delete_by_id(2).exec(db).await?;
     Game::insert(new_day).exec(db).await
 }
 
@@ -173,7 +172,7 @@ pub async fn get_campus_users(db: &DatabaseConnection) -> Result<Vec<pool_users:
     PoolUsers::find().all(db).await
 }
 
-pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<CampusStudent>) {
+pub async fn update_campus_user(db: &DatabaseConnection, campus_users: Vec<CampusUsers>) {
     let _ = PoolUsers::delete_many().exec(db).await;
     let mut new_user: i32 = 0;
     for i in 0..campus_users.len() {

@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
-pub mod campus_users;
 pub mod game;
+pub mod pool_users;
+pub mod student_users;
 pub mod users;

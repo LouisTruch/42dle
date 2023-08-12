@@ -1,6 +1,6 @@
 mod auth;
 mod index;
-mod db;
+mod student_db;
 mod entities;
 mod game;
 mod extarnal_api;
@@ -59,11 +59,12 @@ async fn rocket() -> _ {
             ])
         .mount("/game", routes![
             game::game_try,
-            game::update_db,
+            game::update_pool_db,
+            game::update_student_db,
             game::new_target,
             game::get_guess_image,
             game::get_leaderboard,
-            db::get_all_users,
+            student_db::get_all_users,
         ])
 
 }
@@ -80,7 +81,7 @@ async fn daily_interval(db: DatabaseConnection) {
         sleep(Duration::from_millis(20000)).await;
         println!("NEW TARGET GENERATED");
         {
-            match db::new_day(&db).await {
+            match student_db::new_day(&db).await {
                 Ok(_) => {},
                 Err(e) => {println!("daily_interval: {e}");}
             } 

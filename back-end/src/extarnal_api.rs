@@ -37,7 +37,7 @@ pub async fn get_user_data(token: String) -> (String, String, String) {
     // Prepare the "Authorization" header by appending the token to "Bearer ".
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
-
+    println!("{bearer}");
     // Send a GET request to 42's api with the "Authorization" header.
     // wait the response and parse it into the 'ApiData' struct.
     let client = reqwest::Client::new();
@@ -95,7 +95,7 @@ pub async fn generate_token(code: &str, ) -> String{
 
 // Use to deserialize campus users from 42's api
 #[derive(Deserialize)]
-pub struct CampusStudent {
+pub struct CampusUsers {
     pub login: String,
     pub first_name: String,
     pub last_name: String,
@@ -126,8 +126,8 @@ fn get_numbers_pages(campus_users: &Response) -> i32 {
 
 // Collect every user on a campus
 // Except user who havn't profil pic, inactive users, or alumni users
-pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
-    let mut users: Vec<CampusStudent> = Vec::new();
+pub async fn get_students (token: String, situation: String) -> Vec<CampusUsers>{
+    let mut users: Vec<CampusUsers> = Vec::new();
     let client: reqwest::Client = reqwest::Client::new();
     let mut bearer: String = String::from("Bearer ").to_owned();
     bearer.push_str(&token);
@@ -138,6 +138,10 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
     while i <= nb_pages{
         let mut url: String = String::from("https://api.intra.42.fr/v2/campus/31/users?per_page=100&page=").to_owned();
         url.push_str(&i.to_string());
+        if situation == Situation::Pool.to_string(){
+            let filter = String::from("&filter[pool_month]=august&filter[pool_year]=2023").to_owned();
+            url.push_str(&filter);
+        }
         let campus_users = client.get(url)
             .header("Authorization", bearer.as_str())
             .send()
@@ -149,7 +153,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
 
         // parse response as Json struct caontaining user data
         let new_page = campus_users
-            .json::<Vec<CampusStudent>>()
+            .json::<Vec<CampusUsers>>()
             .await
             .expect("get_users_campus: Parse the response from 42's api failed");
         users.extend(new_page);
@@ -157,7 +161,9 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
         sleep(Duration::from_millis(600)).await;
         i += 1;
     }
-
+    if situation == Situation::Pool.to_string(){
+        return users
+    }
     // remove inactive or alumni users or users without profil pic
     let mut i: usize = 0;
     while i < users.len(){
@@ -172,7 +178,7 @@ pub async fn get_users_campus (token: String) -> Vec<CampusStudent>{
 }
 
 // for each user: verify if he has a profil pic, isn't alunmi & if he is active
-fn verify_user(users: &mut Vec<CampusStudent>, i: usize) -> bool{
+fn verify_user(users: &mut Vec<CampusUsers>, i: usize) -> bool{
     match &users[i].image {
         Some(img_data) => {
             match &img_data.versions {
@@ -201,6 +207,13 @@ fn verify_user(users: &mut Vec<CampusStudent>, i: usize) -> bool{
         Some(val) => {val},
         None => {false}
     };
+    // if let Some(img_data) = &users[i].image {
+    //     if let Some(version) = &img_data.versions {
+    //         if version.medium.is_none() { return false; }
+    //     } else { return false; }
+    // } else { return false; }
+    // let alumni = users[i].alumni.unwrap_or(true);
+    // let active = users[i].active.unwrap_or(false);
     if alumni == true || active == false 
         || users[i].last_name == "Angoule" || users[i].last_name == "Angouleme"{
         return false;

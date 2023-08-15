@@ -5,3 +5,4 @@ front-end/node_modules
 my-skeleton-app/node_modules
 *.jpeg
 .env
+*.env

@@ -11,7 +11,8 @@ export const GET = async ({ fetch, request }) => {
 		}
 	}
 
-	const res = await fetch(env.api + '/game/users', {
+	// do a condition if he his stud or pool know is staus with /auth/situation
+	const res = await fetch(env.api + '/game/student-users', {
 		credentials: 'include',
 		headers: { cookie: cookies },
 	});

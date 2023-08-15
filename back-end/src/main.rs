@@ -1,19 +1,20 @@
 mod auth;
 mod index;
-mod db;
+mod student_db;
+mod pool_db;
 mod entities;
 mod game;
+mod extarnal_api;
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{Database, DatabaseConnection, ConnectionTrait, Statement};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
-use rocket::{Request, Response};
+use rocket::{Request, Response, Config};
 use dotenv::dotenv;
 // use std::thread::{sleep, self};
 // use chrono::{Local, Duration};
 // use std::time::Duration;
 use rocket::tokio::time::{sleep, Duration};
-
 
 #[macro_use]
 extern crate rocket;
@@ -23,6 +24,7 @@ async fn rocket() -> _ {
     env_logger::Builder::new()
         .filter_level(log::LevelFilter::Warn)
         .init();
+    
     dotenv().ok();
     // Connect to the database and panic if fail
     let db_conn = match Database::connect("postgresql://onverrabien:chibrax22@localhost/42DLE").await {
@@ -44,6 +46,9 @@ async fn rocket() -> _ {
     let db_clone: DatabaseConnection = db_conn.clone();
     tokio::spawn(daily_interval(db_clone));
   
+    // let config = Config::SECRET_KEY;
+    // println!("SECRET KEY: {config}");
+
     rocket::build()
         .manage(db_conn)
         .attach(Cors)
@@ -55,14 +60,18 @@ async fn rocket() -> _ {
             auth::logout,
             auth::get_info,
             auth::is_admin,
+            auth::situation,
             ])
         .mount("/game", routes![
             game::game_try,
-            game::update_db,
+            game::update_pool_db,
+            game::update_student_db,
             game::new_target,
             game::get_guess_image,
             game::get_leaderboard,
-            db::get_all_users,
+            game::get_pool_users,
+            game::get_student_users,
+            game::init_speedrun,
         ])
 
 }
@@ -79,9 +88,11 @@ async fn daily_interval(db: DatabaseConnection) {
         sleep(Duration::from_millis(60000)).await;
         println!("NEW TARGET GENERATED");
         {
-            match db::new_day(&db).await {
-                Ok(_) => {},
-                Err(e) => {println!("daily_interval: {e}");}
+            if let Err(e) = student_db::new_day(&db).await {
+                println!("new_target: {e}");
+            } 
+            if let Err(e) = pool_db::new_day(&db).await {
+                println!("new_target: {e}");
             } 
         }
     }

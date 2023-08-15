@@ -3,19 +3,14 @@
 use sea_orm::entity::prelude::*;
 use serde::Serialize;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize)]
-#[sea_orm(table_name = "users")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
+#[sea_orm(table_name = "student_users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub login: String,
+    pub first_name: String,
+    pub last_name: String,
     pub profile_pic: String,
-    pub pokedex: Vec<String>,
-    pub score: i32,
-    #[sea_orm(column_type = "Float")]
-    pub speedrun: f32,
-    pub r#try: Vec<String>,
-    pub win: bool,
-    pub student: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

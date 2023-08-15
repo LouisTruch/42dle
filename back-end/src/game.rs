@@ -166,11 +166,8 @@ pub async fn update_db(token: Option<Token>, db: &State<DatabaseConnection>, jar
 pub async fn new_target(token: Option<Token>, db: &State<DatabaseConnection>) {
     match token {
         Some(_login) => {
-            match db::new_day(&db).await {
-                Ok(_) => {},
-                Err(e) => {
+            if let Err(e) = db::new_day(&db).await {
                     println!("new_target: {e}");
-                }
             }
         }
         None => {
